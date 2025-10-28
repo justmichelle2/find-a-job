@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Apply for {{ job.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title mb-4">
+                    <i class="bi bi-send"></i> Apply for: {{ job.title }}
+                </h3>
+                <p class="text-muted mb-4">
+                    <strong>Company:</strong> {{ job.company.username }}<br>
+                    <strong>Location:</strong> {{ job.location }}
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.cover_letter.id_for_label }}" class="form-label">
+                            <strong>Cover Letter</strong> <span class="text-danger">*</span>
+                        </label>
+                        {{ form.cover_letter }}
+                        {% if form.cover_letter.errors %}
+                            <div class="text-danger small">{{ form.cover_letter.errors }}</div>
+                        {% endif %}
+                        <small class="text-muted">
+                            Please explain why you're interested in this position and why you'd be a great fit.
+                        </small>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Once submitted, your application will be sent to the employer for review.
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'jobs:job_detail' job.pk %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-send"></i> Submit Application
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
