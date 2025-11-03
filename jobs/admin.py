@@ -7,23 +7,32 @@ class JobPostAdmin(admin.ModelAdmin):
     """
     Custom admin interface for JobPost model.
     """
-    list_display = ('title', 'company', 'category', 'job_type', 'location', 'deadline', 'date_posted')
-    list_filter = ('category', 'job_type', 'date_posted', 'deadline')
+    list_display = ('title', 'company', 'category', 'job_type', 'location', 'salary', 'currency', 'is_approved', 'deadline', 'date_posted')
+    list_filter = ('category', 'job_type', 'is_approved', 'currency', 'date_posted', 'deadline')
     search_fields = ('title', 'description', 'location', 'company__username')
     readonly_fields = ('date_posted',)
     date_hierarchy = 'date_posted'
+    actions = ['approve_jobs', 'unapprove_jobs']
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('title', 'company', 'description', 'requirements')
+            'fields': ('title', 'company', 'description', 'requirements', 'is_approved')
         }),
         ('Job Details', {
-            'fields': ('category', 'job_type', 'location', 'salary')
+            'fields': ('category', 'job_type', 'location', 'salary', 'currency')
         }),
         ('Timeline', {
             'fields': ('date_posted', 'deadline')
         }),
     )
+    
+    def approve_jobs(self, request, queryset):
+        queryset.update(is_approved=True)
+    approve_jobs.short_description = "Approve selected job posts"
+    
+    def unapprove_jobs(self, request, queryset):
+        queryset.update(is_approved=False)
+    unapprove_jobs.short_description = "Unapprove selected job posts"
 
 
 @admin.register(Application)
@@ -40,6 +49,9 @@ class ApplicationAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Application Information', {
             'fields': ('applicant', 'job', 'cover_letter')
+        }),
+        ('Documents', {
+            'fields': ('cv', 'transcript', 'certificate', 'other_document')
         }),
         ('Status', {
             'fields': ('status', 'date_applied')

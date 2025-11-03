@@ -46,7 +46,18 @@
                         <a class="nav-link" href="{% url 'jobs:job_list' %}">Browse Jobs</a>
                     </li>
                     {% if user.is_authenticated %}
-                        {% if user.is_company %}
+                        {% if user.is_superuser %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'jobs:admin_dashboard' %}">
+                                    <i class="bi bi-speedometer2"></i> Admin Dashboard
+                                </a>
+                            </li>
+                        {% elif user.is_company %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'jobs:company_dashboard' %}">
+                                    <i class="bi bi-grid"></i> Dashboard
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'jobs:create_job' %}">Post Job</a>
                             </li>
@@ -54,6 +65,11 @@
                                 <a class="nav-link" href="{% url 'jobs:my_jobs' %}">My Jobs</a>
                             </li>
                         {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'jobs:student_dashboard' %}">
+                                    <i class="bi bi-grid"></i> Dashboard
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'jobs:my_applications' %}">My Applications</a>
                             </li>

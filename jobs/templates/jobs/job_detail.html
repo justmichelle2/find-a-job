@@ -39,7 +39,7 @@
                     </div>
                     {% if job.salary %}
                     <div class="col-md-4">
-                        <p><strong><i class="bi bi-currency-dollar"></i> Salary:</strong><br>${{ job.salary|floatformat:0 }}</p>
+                        <p><strong><i class="bi bi-currency-dollar"></i> Salary:</strong><br>{{ job.currency }} {{ job.salary|floatformat:0 }}</p>
                     </div>
                     {% endif %}
                 </div>

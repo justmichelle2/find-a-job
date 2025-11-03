@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Campus Job Board{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4"><i class="bi bi-speedometer2"></i> Admin Dashboard</h1>
+    
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-people-fill"></i> Total Users</h5>
+                    <h2 class="display-4">{{ total_users }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-person-badge"></i> Students</h5>
+                    <h2 class="display-4">{{ total_students }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-building"></i> Companies</h5>
+                    <h2 class="display-4">{{ total_companies }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-briefcase"></i> Total Jobs</h5>
+                    <h2 class="display-4">{{ total_jobs }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Job Posts</h5>
+                    <p class="mb-1"><strong>Approved:</strong> {{ approved_jobs }}</p>
+                    <p class="mb-0"><strong>Pending:</strong> <span class="badge bg-warning">{{ pending_jobs }}</span></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Applications</h5>
+                    <p class="mb-1"><strong>Total:</strong> {{ total_applications }}</p>
+                    <p class="mb-0"><strong>Pending:</strong> <span class="badge bg-info">{{ pending_applications }}</span></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Actions</h5>
+                    <a href="/admin/" class="btn btn-sm btn-primary mb-2 w-100">Django Admin</a>
+                    <a href="{% url 'jobs:job_list' %}" class="btn btn-sm btn-secondary w-100">View All Jobs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if unapproved_jobs %}
+    <div class="card">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Pending Job Approvals ({{ unapproved_jobs.count }})</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Job Title</th>
+                            <th>Company</th>
+                            <th>Category</th>
+                            <th>Posted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in unapproved_jobs %}
+                        <tr>
+                            <td><a href="{% url 'jobs:job_detail' job.pk %}">{{ job.title }}</a></td>
+                            <td>{{ job.company.username }}</td>
+                            <td><span class="badge bg-secondary">{{ job.get_category_display }}</span></td>
+                            <td>{{ job.date_posted|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'jobs:approve_job' job.pk %}" class="btn btn-sm btn-success">
+                                    <i class="bi bi-check-circle"></i> Approve
+                                </a>
+                                <a href="{% url 'jobs:job_detail' job.pk %}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle"></i> No pending job approvals!
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

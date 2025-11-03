@@ -15,7 +15,7 @@
                     <strong>Location:</strong> {{ job.location }}
                 </p>
 
-                <form method="post">
+                <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     
                     <div class="mb-3">
@@ -31,8 +31,52 @@
                         </small>
                     </div>
 
+                    <div class="mb-3">
+                        <label for="{{ form.cv.id_for_label }}" class="form-label">
+                            <strong>CV/Resume</strong> <span class="text-danger">*</span>
+                        </label>
+                        {{ form.cv }}
+                        {% if form.cv.errors %}
+                            <div class="text-danger small">{{ form.cv.errors }}</div>
+                        {% endif %}
+                        <small class="text-muted">{{ form.cv.help_text }}</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.transcript.id_for_label }}" class="form-label">
+                            <strong>Transcript</strong> (Optional)
+                        </label>
+                        {{ form.transcript }}
+                        {% if form.transcript.errors %}
+                            <div class="text-danger small">{{ form.transcript.errors }}</div>
+                        {% endif %}
+                        <small class="text-muted">{{ form.transcript.help_text }}</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.certificate.id_for_label }}" class="form-label">
+                            <strong>Certificates</strong> (Optional)
+                        </label>
+                        {{ form.certificate }}
+                        {% if form.certificate.errors %}
+                            <div class="text-danger small">{{ form.certificate.errors }}</div>
+                        {% endif %}
+                        <small class="text-muted">{{ form.certificate.help_text }}</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.other_document.id_for_label }}" class="form-label">
+                            <strong>Other Documents</strong> (Optional)
+                        </label>
+                        {{ form.other_document }}
+                        {% if form.other_document.errors %}
+                            <div class="text-danger small">{{ form.other_document.errors }}</div>
+                        {% endif %}
+                        <small class="text-muted">{{ form.other_document.help_text }}</small>
+                    </div>
+
                     <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> Once submitted, your application will be sent to the employer for review.
+                        <i class="bi bi-info-circle"></i> Once submitted, your application will be sent to the employer for review. You will receive email notifications about application updates.
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
