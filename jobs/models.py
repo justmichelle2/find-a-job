@@ -26,14 +26,44 @@ class JobPost(models.Model):
     SALES = 'SLS'
     HR = 'HR'
     ENGINEERING = 'ENG'
+    EDUCATION = 'EDU'
+    HEALTHCARE = 'HLT'
+    MEDIA = 'MED'
+    LAW = 'LAW'
+    CONSTRUCTION = 'CON'
+    CUSTOMER_SERVICE = 'CS'
+    ARCHITECTURE = 'ARC'
+    ACCOUNTING = 'ACC'
+    OTHER = 'OTH'
     
     CATEGORY_CHOICES = [
-        (IT, 'Information Technology'),
-        (MARKETING, 'Marketing'),
-        (FINANCE, 'Finance'),
+        (IT, 'IT & Software'),
+        (FINANCE, 'Finance & Accounting'),
+        (ACCOUNTING, 'Accounting'),
+        (MARKETING, 'Marketing & Sales'),
         (SALES, 'Sales'),
-        (HR, 'Human Resources'),
+        (EDUCATION, 'Education & Training'),
         (ENGINEERING, 'Engineering'),
+        (ARCHITECTURE, 'Architecture'),
+        (HEALTHCARE, 'Healthcare & Medicine'),
+        (MEDIA, 'Media & Design'),
+        (HR, 'Human Resources'),
+        (LAW, 'Law & Administration'),
+        (CONSTRUCTION, 'Construction & Real Estate'),
+        (CUSTOMER_SERVICE, 'Customer Service'),
+        (OTHER, 'Others'),
+    ]
+    
+    CURRENCY_CHOICES = [
+        ('USD', 'USD - US Dollar'),
+        ('GHS', 'GHS - Ghanaian Cedi'),
+        ('EUR', 'EUR - Euro'),
+        ('GBP', 'GBP - British Pound'),
+        ('NGN', 'NGN - Nigerian Naira'),
+        ('KES', 'KES - Kenyan Shilling'),
+        ('ZAR', 'ZAR - South African Rand'),
+        ('CAD', 'CAD - Canadian Dollar'),
+        ('AUD', 'AUD - Australian Dollar'),
     ]
     
     title = models.CharField(max_length=200)
@@ -56,6 +86,16 @@ class JobPost(models.Model):
         null=True,
         blank=True,
         help_text="Salary range (optional)"
+    )
+    currency = models.CharField(
+        max_length=3,
+        choices=CURRENCY_CHOICES,
+        default='USD',
+        help_text="Currency for salary"
+    )
+    is_approved = models.BooleanField(
+        default=True,
+        help_text="Whether this job post is approved by admin"
     )
     
     class Meta:
@@ -96,6 +136,30 @@ class Application(models.Model):
         related_name='job_applications'
     )
     cover_letter = models.TextField(help_text="Why you're interested in this position")
+    cv = models.FileField(
+        upload_to='applications/cv/',
+        null=True,
+        blank=True,
+        help_text="Upload your CV/Resume (PDF, DOC, DOCX)"
+    )
+    transcript = models.FileField(
+        upload_to='applications/transcripts/',
+        null=True,
+        blank=True,
+        help_text="Upload your academic transcript (PDF)"
+    )
+    certificate = models.FileField(
+        upload_to='applications/certificates/',
+        null=True,
+        blank=True,
+        help_text="Upload any relevant certificates (PDF)"
+    )
+    other_document = models.FileField(
+        upload_to='applications/other/',
+        null=True,
+        blank=True,
+        help_text="Upload any other supporting document"
+    )
     date_applied = models.DateTimeField(default=timezone.now)
     status = models.CharField(
         max_length=1,

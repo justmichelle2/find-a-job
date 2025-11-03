@@ -1,0 +1,140 @@
+Fix the issue where the salary input field shows "Please enter a number" even when a number like 10,000 is entered.
+Update the code so that:
+•	The input accepts both plain numbers (e.g., 10000) and formatted numbers with commas (e.g., 10,000).
+•	On submission, it converts any formatted input to a valid numeric value (e.g., 10000).
+•	Use proper HTML5 validation or JavaScript parsing to handle this cleanly.
+•	If the field uses <input type="number">, allow it to accept comma-formatted input or switch to <input type="text"> with validation that ensures only numeric values are accepted.
+•	Make sure the salary still saves as a number in the database.
+Add an admin portal and dashboard to this campus job search web app.
+Make sure of the following:
+1. Authentication System
+•	Implement separate login and registration systems for:
+o	Companies / Employers: can post, edit, and manage job listings.
+o	Students / Job Seekers: can browse, search, and apply for jobs.
+•	Each user type should have its own dashboard after login (e.g., /company/dashboard and /student/dashboard).
+•	Ensure role-based access control so employers can’t access student features and vice versa.
+•	Admins should have full control through /admin — they can view all users, job posts, and manage platform activity.
+2. Admin Portal
+•	Create an /admin dashboard showing:
+o	Total number of users (companies & students)
+o	Total number of job postings
+o	Applications overview
+o	A section to approve or remove job posts.
+3. Company Dashboard
+•	Let companies:
+o	Post new jobs
+o	View, edit, and delete their posted jobs
+o	See applicants for each job
+4. Student Dashboard
+•	Let students:
+o	View all available jobs
+o	Apply for jobs
+o	View their application history
+5. Salary Field Update
+•	In the job posting form:
+o	Add a dropdown menu next to the salary input to select currency (e.g., GHS, USD, EUR, GBP, NGN, etc.)
+o	Ensure the chosen currency is saved to the database and displayed properly in job listings.
+6. UI & UX
+•	Make dashboards clean, responsive, and modern (use Tailwind or Bootstrap if needed).
+•	Add clear navigation between login, dashboard, and job pages.
+7. Optional (if using Django or Flask backend):
+•	Use Django’s built-in admin for superuser control.
+•	Use model-based user roles (e.g., is_company, is_student, is_admin).
+•	Ensure proper form validation and CSRF protection.
+Finally, test everything to confirm:
+•	Users are correctly redirected based on their roles.
+•	Currency selection works in job posts.
+•	Admin can see and manage all activities from their dashboard.
+
+Fix the error OperationalError: no such column: jobs_jobpost.is_approved in this Django project.
+Steps to take:
+1.	Check the JobPost model inside jobs/models.py — it has an is_approved field that doesn’t exist in the database.
+2.	Run the proper Django migration commands to create or update this column:
+o	python manage.py makemigrations jobs
+o	python manage.py migrate
+3.	If the migrations don’t apply correctly, create a new migration file manually to add the is_approved field to the JobPost model with a default value of False.
+4.	Ensure all migrations are applied and the database schema matches the current model definitions.
+5.	Restart the server and verify that the homepage (JobListView) loads correctly without the OperationalError.
+Fix the issue where posted jobs do not appear on the job listings page — it always shows “No job posted” or “No job found.”
+Steps to correct this:
+1.	Check the JobPost model in jobs/models.py and confirm that job posts are being saved correctly when submitted through the “Post Job” form.
+2.	Inspect the JobListView (or equivalent view function) and make sure it retrieves all valid jobs from the database.
+o	If it filters by is_approved=True, temporarily remove that filter or ensure newly created jobs have is_approved=True by default.
+3.	Verify that the job posting form (forms.py or views.py) correctly calls .save() and commits the object to the database.
+4.	Update the template (job_list.html or equivalent) to correctly loop through the job objects and display their data.
+5.	Test the process: post a new job, refresh the job list, and confirm it displays.
+6.	If the data is not being stored, add debugging logs or print() statements to confirm form validation and saving.
+Bonus:
+•	Ensure migrations are applied and the database isn’t empty due to a reset.
+•	Make sure the correct queryset is being passed to the template context.
+Fix the issue where posted jobs do not appear on the job listings page — it always shows “No job posted” or “No job found.”
+Steps to correct this:
+1.	Check the JobPost model in jobs/models.py and confirm that job posts are being saved correctly when submitted through the “Post Job” form.
+2.	Inspect the JobListView (or equivalent view function) and make sure it retrieves all valid jobs from the database.
+o	If it filters by is_approved=True, temporarily remove that filter or ensure newly created jobs have is_approved=True by default.
+3.	Verify that the job posting form (forms.py or views.py) correctly calls .save() and commits the object to the database.
+4.	Update the template (job_list.html or equivalent) to correctly loop through the job objects and display their data.
+5.	Test the process: post a new job, refresh the job list, and confirm it displays.
+6.	If the data is not being stored, add debugging logs or print() statements to confirm form validation and saving.
+Bonus:
+•	Ensure migrations are applied and the database isn’t empty due to a reset.
+•	Make sure the correct queryset is being passed to the template context.
+________________________________________
+Upgrade this Django Job Posting and Search web app with the following full features:
+________________________________________
+1. Job Categories
+•	Expand the existing job categories to include more diverse fields such as:
+o	IT & Software
+o	Finance & Accounting
+o	Marketing & Sales
+o	Education & Training
+o	Engineering & Architecture
+o	Healthcare & Medicine
+o	Media & Design
+o	Human Resources
+o	Law & Administration
+o	Construction & Real Estate
+o	Customer Service
+o	Others
+•	Update all relevant forms, templates, and models to display these categories everywhere jobs are created, edited, or listed.
+________________________________________
+2. CV and Document Uploads
+•	When a student/applicant applies for a job:
+o	Allow uploading of required documents such as CV, transcript, certificates, or any file requested by the company.
+o	Store files securely in the media/ directory.
+o	Show uploaded files to the employer in the job application dashboard.
+________________________________________
+3. Email Notifications
+•	Send automated email notifications for these events:
+o	When a student applies for a job → send confirmation to the student and alert the company.
+o	When a company approves or rejects an application → send an update email to the applicant.
+•	Use Django’s built-in send_mail() or configure SMTP settings.
+•	Add proper HTML templates for professional-looking emails.
+________________________________________
+4. Company Controls
+•	On the Company Dashboard:
+o	Let companies approve or reject job applications directly from the web app.
+o	Add an option to edit job posts (correct errors, update salary, change requirements, etc.).
+o	Add a delete button for jobs they no longer want listed (especially after hiring).
+o	When a job is deleted, it should also remove all associated applications.
+________________________________________
+5. Application Workflow
+•	Add a status field for applications: "Pending", "Approved", "Rejected".
+•	Show status updates to both students and companies.
+•	Ensure the admin can still view all applications for monitoring.
+________________________________________
+6. Polishing & Testing
+•	Ensure all pages are responsive and styled cleanly with Bootstrap or Tailwind.
+•	Validate all forms (especially file uploads and email).
+•	Test end-to-end: posting a job, applying with documents, email sending, company approval, and job deletion.
+________________________________________
+Bonus (Optional if time allows):
+•	Add search and filter functionality (by job title, category, location, or salary range).
+•	Allow students to view their application history.
+•	Add pagination to job listings.
+________________________________________
+Make sure to:
+•	Update all models, forms, views, templates, and URLs as needed.
+•	Run and apply migrations.
+•	Keep the admin site updated with all new models and features.
+

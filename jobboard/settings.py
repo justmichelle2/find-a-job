@@ -140,3 +140,7 @@ AUTH_USER_MODEL = 'users.CustomUser'
 LOGIN_URL = 'users:login'
 LOGIN_REDIRECT_URL = 'jobs:job_list'
 LOGOUT_REDIRECT_URL = 'jobs:job_list'
+
+# Email Configuration (Console backend for development)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@campusjobboard.com'

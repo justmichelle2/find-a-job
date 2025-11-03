@@ -1,10 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Count
+from django.http import HttpResponseForbidden
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import JobPost, Application
 from .forms import JobPostForm, ApplicationForm
+from users.models import CustomUser
 
 
 class JobListView(ListView):
@@ -17,7 +21,7 @@ class JobListView(ListView):
     paginate_by = 10
     
     def get_queryset(self):
-        queryset = JobPost.objects.all()
+        queryset = JobPost.objects.filter(is_approved=True)
         
         # Search functionality
         search_query = self.request.GET.get('search')
@@ -98,9 +102,29 @@ def apply_job(request, pk):
         return redirect('jobs:job_detail', pk=pk)
     
     if request.method == 'POST':
-        form = ApplicationForm(request.POST, user=request.user, job=job)
+        form = ApplicationForm(request.POST, request.FILES, user=request.user, job=job)
         if form.is_valid():
             application = form.save()
+            
+            try:
+                send_mail(
+                    subject=f'New Application for {job.title}',
+                    message=f'You have received a new application from {request.user.username} for the position: {job.title}',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[job.company.email],
+                    fail_silently=True,
+                )
+                
+                send_mail(
+                    subject=f'Application Submitted: {job.title}',
+                    message=f'Your application for {job.title} at {job.company.username} has been submitted successfully. We will notify you once there is an update.',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[request.user.email],
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+            
             messages.success(request, f'Your application for "{job.title}" has been submitted successfully!')
             return redirect('jobs:job_detail', pk=pk)
     else:
@@ -162,3 +186,203 @@ def my_jobs(request):
         'jobs': jobs,
         'today': timezone.now().date()
     })
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def admin_dashboard(request):
+    """
+    Admin dashboard with statistics and job approval.
+    """
+    total_users = CustomUser.objects.count()
+    total_students = CustomUser.objects.filter(is_company=False).count()
+    total_companies = CustomUser.objects.filter(is_company=True).count()
+    total_jobs = JobPost.objects.count()
+    approved_jobs = JobPost.objects.filter(is_approved=True).count()
+    pending_jobs = JobPost.objects.filter(is_approved=False).count()
+    total_applications = Application.objects.count()
+    pending_applications = Application.objects.filter(status='P').count()
+    
+    unapproved_jobs = JobPost.objects.filter(is_approved=False).select_related('company')
+    
+    context = {
+        'total_users': total_users,
+        'total_students': total_students,
+        'total_companies': total_companies,
+        'total_jobs': total_jobs,
+        'approved_jobs': approved_jobs,
+        'pending_jobs': pending_jobs,
+        'total_applications': total_applications,
+        'pending_applications': pending_applications,
+        'unapproved_jobs': unapproved_jobs,
+    }
+    
+    return render(request, 'jobs/admin_dashboard.html', context)
+
+
+@login_required
+def company_dashboard(request):
+    """
+    Company dashboard for managing jobs and applications.
+    """
+    if not request.user.is_company:
+        messages.warning(request, "Only companies can access this page.")
+        return redirect('jobs:job_list')
+    
+    from django.utils import timezone
+    jobs = JobPost.objects.filter(company=request.user).annotate(
+        application_count=Count('applications')
+    )
+    
+    total_jobs = jobs.count()
+    active_jobs = jobs.filter(deadline__gte=timezone.now().date()).count()
+    total_applications = Application.objects.filter(job__company=request.user).count()
+    pending_applications = Application.objects.filter(
+        job__company=request.user,
+        status='P'
+    ).count()
+    
+    recent_applications = Application.objects.filter(
+        job__company=request.user
+    ).select_related('applicant', 'job').order_by('-date_applied')[:5]
+    
+    context = {
+        'total_jobs': total_jobs,
+        'active_jobs': active_jobs,
+        'total_applications': total_applications,
+        'pending_applications': pending_applications,
+        'jobs': jobs[:5],
+        'recent_applications': recent_applications,
+    }
+    
+    return render(request, 'jobs/company_dashboard.html', context)
+
+
+@login_required
+def student_dashboard(request):
+    """
+    Student dashboard for viewing jobs and application history.
+    """
+    if request.user.is_company:
+        messages.warning(request, "Students only.")
+        return redirect('jobs:job_list')
+    
+    applications = Application.objects.filter(
+        applicant=request.user
+    ).select_related('job').order_by('-date_applied')
+    
+    total_applications = applications.count()
+    pending = applications.filter(status='P').count()
+    accepted = applications.filter(status='A').count()
+    rejected = applications.filter(status='R').count()
+    
+    recent_jobs = JobPost.objects.filter(is_approved=True).order_by('-date_posted')[:5]
+    
+    context = {
+        'applications': applications[:5],
+        'total_applications': total_applications,
+        'pending': pending,
+        'accepted': accepted,
+        'rejected': rejected,
+        'recent_jobs': recent_jobs,
+    }
+    
+    return render(request, 'jobs/student_dashboard.html', context)
+
+
+@login_required
+def update_application_status(request, pk, status):
+    """
+    Update application status (approve/reject).
+    """
+    application = get_object_or_404(Application, pk=pk)
+    
+    if application.job.company != request.user and not request.user.is_superuser:
+        return HttpResponseForbidden("You don't have permission to update this application.")
+    
+    if status in ['A', 'R']:
+        application.status = status
+        application.save()
+        
+        status_text = 'Accepted' if status == 'A' else 'Rejected'
+        
+        try:
+            send_mail(
+                subject=f'Application Update: {application.job.title}',
+                message=f'Your application for {application.job.title} has been {status_text}.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[application.applicant.email],
+                fail_silently=True,
+            )
+        except Exception:
+            pass
+        
+        messages.success(request, f'Application {status_text.lower()} successfully!')
+    
+    return redirect(request.META.get('HTTP_REFERER', 'jobs:my_applications'))
+
+
+@login_required
+def edit_job(request, pk):
+    """
+    Edit a job post.
+    """
+    job = get_object_or_404(JobPost, pk=pk)
+    
+    if job.company != request.user and not request.user.is_superuser:
+        return HttpResponseForbidden("You don't have permission to edit this job.")
+    
+    if request.method == 'POST':
+        form = JobPostForm(request.POST, instance=job, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Job updated successfully!')
+            return redirect('jobs:job_detail', pk=pk)
+    else:
+        form = JobPostForm(instance=job, user=request.user)
+    
+    return render(request, 'jobs/edit_job.html', {'form': form, 'job': job})
+
+
+@login_required
+def delete_job(request, pk):
+    """
+    Delete a job post.
+    """
+    job = get_object_or_404(JobPost, pk=pk)
+    
+    if job.company != request.user and not request.user.is_superuser:
+        return HttpResponseForbidden("You don't have permission to delete this job.")
+    
+    if request.method == 'POST':
+        job_title = job.title
+        job.delete()
+        messages.success(request, f'Job "{job_title}" deleted successfully!')
+        return redirect('jobs:company_dashboard' if request.user.is_company else 'jobs:admin_dashboard')
+    
+    return render(request, 'jobs/delete_job.html', {'job': job})
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def approve_job(request, pk):
+    """
+    Approve a job post (admin only).
+    """
+    job = get_object_or_404(JobPost, pk=pk)
+    job.is_approved = True
+    job.save()
+    
+    try:
+        send_mail(
+            subject=f'Job Post Approved: {job.title}',
+            message=f'Your job post "{job.title}" has been approved and is now visible to applicants.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[job.company.email],
+            fail_silently=True,
+        )
+    except Exception:
+        pass
+    
+    messages.success(request, f'Job "{job.title}" approved!')
+    return redirect('jobs:admin_dashboard')
