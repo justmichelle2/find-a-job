@@ -94,7 +94,7 @@ class JobPost(models.Model):
         help_text="Currency for salary"
     )
     is_approved = models.BooleanField(
-        default=True,
+        default=False,
         help_text="Whether this job post is approved by admin"
     )
     

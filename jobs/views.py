@@ -147,8 +147,8 @@ def create_job_post(request):
         form = JobPostForm(request.POST, user=request.user)
         if form.is_valid():
             job_post = form.save()
-            messages.success(request, f'Job post "{job_post.title}" has been created successfully!')
-            return redirect('jobs:job_detail', pk=job_post.pk)
+            messages.success(request, f'Job post "{job_post.title}" has been created successfully! It will be visible to applicants once approved by an administrator.')
+            return redirect('jobs:company_dashboard')
     else:
         form = JobPostForm(user=request.user)
     

@@ -11,6 +11,18 @@ A Django-based job board web application that connects students with internships
 - **Port**: 5000 (webview)
 
 ## Recent Changes
+- **2025-11-03**: Major Feature Update
+  - Added comprehensive dashboard system (Admin, Company, Student)
+  - Expanded job categories (15 categories including IT, Healthcare, Education, etc.)
+  - Added multi-currency support for salary (USD, GHS, EUR, GBP, NGN, etc.)
+  - Implemented CV and document upload system
+  - Added email notification system for applications
+  - Implemented job approval workflow for admins
+  - Added application status management (Accept/Reject)
+  - Enhanced admin portal with statistics
+  - Added job editing and deletion functionality
+  - Fixed salary input to accept comma-formatted numbers
+
 - **2025-11-03**: Initial Replit setup
   - Installed Python 3.11 and Django 5.2.7
   - Configured Django settings for Replit proxy (ALLOWED_HOSTS, CSRF_TRUSTED_ORIGINS)
