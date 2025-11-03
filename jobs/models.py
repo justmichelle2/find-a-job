@@ -92,6 +92,11 @@ class JobPost(models.Model):
                                 choices=CURRENCY_CHOICES,
                                 default='USD',
                                 help_text="Currency for salary")
+    image = models.ImageField(
+        upload_to='job_images/',
+        null=True,
+        blank=True,
+        help_text="Optional image for the job posting")
     is_approved = models.BooleanField(
         default=False, help_text="Whether this job post is approved by admin")
 

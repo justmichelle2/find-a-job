@@ -18,7 +18,7 @@ class JobPostForm(forms.ModelForm):
         model = JobPost
         fields = [
             'title', 'description', 'requirements', 'location', 'category',
-            'job_type', 'deadline', 'salary', 'currency'
+            'job_type', 'deadline', 'salary', 'currency', 'image'
         ]
         widgets = {
             'title':
@@ -46,6 +46,7 @@ class JobPostForm(forms.ModelForm):
             }),
             'currency':
             forms.Select(attrs={'class': 'form-control'}),
+            'image': forms.FileInput(attrs={'class': 'form-control'})
         }
 
     def __init__(self, *args, **kwargs):

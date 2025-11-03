@@ -152,7 +152,7 @@ def create_job_post(request):
         return redirect('jobs:job_list')
 
     if request.method == 'POST':
-        form = JobPostForm(request.POST, user=request.user)
+        form = JobPostForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             # Save but don't commit so we can set additional fields
             job_post = form.save(commit=False)
@@ -359,7 +359,7 @@ def edit_job(request, pk):
             "You don't have permission to edit this job.")
 
     if request.method == 'POST':
-        form = JobPostForm(request.POST, instance=job, user=request.user)
+        form = JobPostForm(request.POST, request.FILES, instance=job, user=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, 'Job updated successfully!')
