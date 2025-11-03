@@ -14,20 +14,19 @@ class RegistrationForm(UserCreationForm):
     is_company = forms.BooleanField(
         required=False,
         label="I am a company/employer",
-        help_text="Check this if you want to post jobs"
-    )
-    
+        help_text="Check this if you want to post jobs")
+
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'first_name', 'last_name', 
-                  'is_company', 'password1', 'password2')
-    
+        fields = ('username', 'email', 'first_name', 'last_name', 'is_company',
+                  'password1', 'password2')
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Add Bootstrap classes to form fields
         for field_name, field in self.fields.items():
             field.widget.attrs.update({'class': 'form-control'})
-    
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
@@ -45,16 +44,20 @@ class LoginForm(forms.Form):
     """
     username = forms.CharField(
         max_length=150,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username'})
-    )
-    password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'})
-    )
-    
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Username'
+        }))
+    password = forms.CharField(widget=forms.PasswordInput(
+        attrs={
+            'class': 'form-control',
+            'placeholder': 'Password'
+        }))
+
     def clean(self):
         username = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
-        
+
         if username and password:
             user = authenticate(username=username, password=password)
             if not user:
@@ -62,4 +65,3 @@ class LoginForm(forms.Form):
             if not user.is_active:
                 raise forms.ValidationError("This account is inactive.")
         return self.cleaned_data
-

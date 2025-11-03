@@ -19,31 +19,30 @@ class JobListView(ListView):
     template_name = 'jobs/job_list.html'
     context_object_name = 'jobs'
     paginate_by = 10
-    
+
     def get_queryset(self):
         queryset = JobPost.objects.filter(is_approved=True)
-        
+
         # Search functionality
         search_query = self.request.GET.get('search')
         if search_query:
             queryset = queryset.filter(
-                Q(title__icontains=search_query) |
-                Q(description__icontains=search_query) |
-                Q(location__icontains=search_query)
-            )
-        
+                Q(title__icontains=search_query)
+                | Q(description__icontains=search_query)
+                | Q(location__icontains=search_query))
+
         # Filter by category
         category = self.request.GET.get('category')
         if category:
             queryset = queryset.filter(category=category)
-        
+
         # Filter by job type
         job_type = self.request.GET.get('job_type')
         if job_type:
             queryset = queryset.filter(job_type=job_type)
-        
+
         return queryset.order_by('-date_posted')
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('search', '')
@@ -61,26 +60,25 @@ class JobDetailView(DetailView):
     model = JobPost
     template_name = 'jobs/job_detail.html'
     context_object_name = 'job'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         job = self.get_object()
         user = self.request.user
-        
+
         # Check if user has already applied
         if user.is_authenticated and not user.is_company:
             context['has_applied'] = Application.objects.filter(
-                job=job,
-                applicant=user
-            ).exists()
-            context['user_applications'] = Application.objects.filter(applicant=user)
+                job=job, applicant=user).exists()
+            context['user_applications'] = Application.objects.filter(
+                applicant=user)
         else:
             context['has_applied'] = False
-        
+
         # Add today's date for deadline comparison
         from django.utils import timezone
         context['today'] = timezone.now().date()
-        
+
         return context
 
 
@@ -90,46 +88,56 @@ def apply_job(request, pk):
     Function-based view for students to apply for a job.
     """
     job = get_object_or_404(JobPost, pk=pk)
-    
+
     # Only non-company users can apply
     if request.user.is_company:
-        messages.warning(request, "Companies cannot apply for jobs. Please log in as a student.")
+        messages.warning(
+            request,
+            "Companies cannot apply for jobs. Please log in as a student.")
         return redirect('jobs:job_detail', pk=pk)
-    
+
     # Check if already applied
     if Application.objects.filter(job=job, applicant=request.user).exists():
         messages.info(request, "You have already applied for this job.")
         return redirect('jobs:job_detail', pk=pk)
-    
+
     if request.method == 'POST':
-        form = ApplicationForm(request.POST, request.FILES, user=request.user, job=job)
+        form = ApplicationForm(request.POST,
+                               request.FILES,
+                               user=request.user,
+                               job=job)
         if form.is_valid():
             application = form.save()
-            
+
             try:
                 send_mail(
                     subject=f'New Application for {job.title}',
-                    message=f'You have received a new application from {request.user.username} for the position: {job.title}',
+                    message=
+                    f'You have received a new application from {request.user.username} for the position: {job.title}',
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[job.company.email],
                     fail_silently=True,
                 )
-                
+
                 send_mail(
                     subject=f'Application Submitted: {job.title}',
-                    message=f'Your application for {job.title} at {job.company.username} has been submitted successfully. We will notify you once there is an update.',
+                    message=
+                    f'Your application for {job.title} at {job.company.username} has been submitted successfully. We will notify you once there is an update.',
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[request.user.email],
                     fail_silently=True,
                 )
             except Exception:
                 pass
-            
-            messages.success(request, f'Your application for "{job.title}" has been submitted successfully!')
+
+            messages.success(
+                request,
+                f'Your application for "{job.title}" has been submitted successfully!'
+            )
             return redirect('jobs:job_detail', pk=pk)
     else:
         form = ApplicationForm(user=request.user, job=job)
-    
+
     return render(request, 'jobs/apply_job.html', {'form': form, 'job': job})
 
 
@@ -142,16 +150,19 @@ def create_job_post(request):
     if not request.user.is_company:
         messages.warning(request, "Only companies can post jobs.")
         return redirect('jobs:job_list')
-    
+
     if request.method == 'POST':
         form = JobPostForm(request.POST, user=request.user)
         if form.is_valid():
             job_post = form.save()
-            messages.success(request, f'Job post "{job_post.title}" has been created successfully! It will be visible to applicants once approved by an administrator.')
+            messages.success(
+                request,
+                f'Job post "{job_post.title}" has been created successfully! It will be visible to applicants once approved by an administrator.'
+            )
             return redirect('jobs:company_dashboard')
     else:
         form = JobPostForm(user=request.user)
-    
+
     return render(request, 'jobs/create_job.html', {'form': form})
 
 
@@ -163,12 +174,15 @@ def my_applications(request):
     if request.user.is_company:
         # Companies see applications for their posted jobs
         jobs = JobPost.objects.filter(company=request.user)
-        applications = Application.objects.filter(job__in=jobs).select_related('applicant', 'job')
+        applications = Application.objects.filter(job__in=jobs).select_related(
+            'applicant', 'job')
     else:
         # Students see their own applications
-        applications = Application.objects.filter(applicant=request.user).select_related('job')
-    
-    return render(request, 'jobs/my_applications.html', {'applications': applications})
+        applications = Application.objects.filter(
+            applicant=request.user).select_related('job')
+
+    return render(request, 'jobs/my_applications.html',
+                  {'applications': applications})
 
 
 @login_required
@@ -179,7 +193,7 @@ def my_jobs(request):
     if not request.user.is_company:
         messages.warning(request, "Only companies can view this page.")
         return redirect('jobs:job_list')
-    
+
     from django.utils import timezone
     jobs = JobPost.objects.filter(company=request.user)
     return render(request, 'jobs/my_jobs.html', {
@@ -202,9 +216,10 @@ def admin_dashboard(request):
     pending_jobs = JobPost.objects.filter(is_approved=False).count()
     total_applications = Application.objects.count()
     pending_applications = Application.objects.filter(status='P').count()
-    
-    unapproved_jobs = JobPost.objects.filter(is_approved=False).select_related('company')
-    
+
+    unapproved_jobs = JobPost.objects.filter(
+        is_approved=False).select_related('company')
+
     context = {
         'total_users': total_users,
         'total_students': total_students,
@@ -216,7 +231,7 @@ def admin_dashboard(request):
         'pending_applications': pending_applications,
         'unapproved_jobs': unapproved_jobs,
     }
-    
+
     return render(request, 'jobs/admin_dashboard.html', context)
 
 
@@ -228,24 +243,22 @@ def company_dashboard(request):
     if not request.user.is_company:
         messages.warning(request, "Only companies can access this page.")
         return redirect('jobs:job_list')
-    
+
     from django.utils import timezone
     jobs = JobPost.objects.filter(company=request.user).annotate(
-        application_count=Count('applications')
-    )
-    
+        application_count=Count('applications'))
+
     total_jobs = jobs.count()
     active_jobs = jobs.filter(deadline__gte=timezone.now().date()).count()
-    total_applications = Application.objects.filter(job__company=request.user).count()
+    total_applications = Application.objects.filter(
+        job__company=request.user).count()
     pending_applications = Application.objects.filter(
-        job__company=request.user,
-        status='P'
-    ).count()
-    
+        job__company=request.user, status='P').count()
+
     recent_applications = Application.objects.filter(
-        job__company=request.user
-    ).select_related('applicant', 'job').order_by('-date_applied')[:5]
-    
+        job__company=request.user).select_related(
+            'applicant', 'job').order_by('-date_applied')[:5]
+
     context = {
         'total_jobs': total_jobs,
         'active_jobs': active_jobs,
@@ -254,7 +267,7 @@ def company_dashboard(request):
         'jobs': jobs[:5],
         'recent_applications': recent_applications,
     }
-    
+
     return render(request, 'jobs/company_dashboard.html', context)
 
 
@@ -266,18 +279,18 @@ def student_dashboard(request):
     if request.user.is_company:
         messages.warning(request, "Students only.")
         return redirect('jobs:job_list')
-    
+
     applications = Application.objects.filter(
-        applicant=request.user
-    ).select_related('job').order_by('-date_applied')
-    
+        applicant=request.user).select_related('job').order_by('-date_applied')
+
     total_applications = applications.count()
     pending = applications.filter(status='P').count()
     accepted = applications.filter(status='A').count()
     rejected = applications.filter(status='R').count()
-    
-    recent_jobs = JobPost.objects.filter(is_approved=True).order_by('-date_posted')[:5]
-    
+
+    recent_jobs = JobPost.objects.filter(
+        is_approved=True).order_by('-date_posted')[:5]
+
     context = {
         'applications': applications[:5],
         'total_applications': total_applications,
@@ -286,7 +299,7 @@ def student_dashboard(request):
         'rejected': rejected,
         'recent_jobs': recent_jobs,
     }
-    
+
     return render(request, 'jobs/student_dashboard.html', context)
 
 
@@ -296,29 +309,32 @@ def update_application_status(request, pk, status):
     Update application status (approve/reject).
     """
     application = get_object_or_404(Application, pk=pk)
-    
+
     if application.job.company != request.user and not request.user.is_superuser:
-        return HttpResponseForbidden("You don't have permission to update this application.")
-    
+        return HttpResponseForbidden(
+            "You don't have permission to update this application.")
+
     if status in ['A', 'R']:
         application.status = status
         application.save()
-        
+
         status_text = 'Accepted' if status == 'A' else 'Rejected'
-        
+
         try:
             send_mail(
                 subject=f'Application Update: {application.job.title}',
-                message=f'Your application for {application.job.title} has been {status_text}.',
+                message=
+                f'Your application for {application.job.title} has been {status_text}.',
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[application.applicant.email],
                 fail_silently=True,
             )
         except Exception:
             pass
-        
-        messages.success(request, f'Application {status_text.lower()} successfully!')
-    
+
+        messages.success(request,
+                         f'Application {status_text.lower()} successfully!')
+
     return redirect(request.META.get('HTTP_REFERER', 'jobs:my_applications'))
 
 
@@ -328,10 +344,11 @@ def edit_job(request, pk):
     Edit a job post.
     """
     job = get_object_or_404(JobPost, pk=pk)
-    
+
     if job.company != request.user and not request.user.is_superuser:
-        return HttpResponseForbidden("You don't have permission to edit this job.")
-    
+        return HttpResponseForbidden(
+            "You don't have permission to edit this job.")
+
     if request.method == 'POST':
         form = JobPostForm(request.POST, instance=job, user=request.user)
         if form.is_valid():
@@ -340,7 +357,7 @@ def edit_job(request, pk):
             return redirect('jobs:job_detail', pk=pk)
     else:
         form = JobPostForm(instance=job, user=request.user)
-    
+
     return render(request, 'jobs/edit_job.html', {'form': form, 'job': job})
 
 
@@ -350,16 +367,18 @@ def delete_job(request, pk):
     Delete a job post.
     """
     job = get_object_or_404(JobPost, pk=pk)
-    
+
     if job.company != request.user and not request.user.is_superuser:
-        return HttpResponseForbidden("You don't have permission to delete this job.")
-    
+        return HttpResponseForbidden(
+            "You don't have permission to delete this job.")
+
     if request.method == 'POST':
         job_title = job.title
         job.delete()
         messages.success(request, f'Job "{job_title}" deleted successfully!')
-        return redirect('jobs:company_dashboard' if request.user.is_company else 'jobs:admin_dashboard')
-    
+        return redirect('jobs:company_dashboard' if request.user.
+                        is_company else 'jobs:admin_dashboard')
+
     return render(request, 'jobs/delete_job.html', {'job': job})
 
 
@@ -372,17 +391,18 @@ def approve_job(request, pk):
     job = get_object_or_404(JobPost, pk=pk)
     job.is_approved = True
     job.save()
-    
+
     try:
         send_mail(
             subject=f'Job Post Approved: {job.title}',
-            message=f'Your job post "{job.title}" has been approved and is now visible to applicants.',
+            message=
+            f'Your job post "{job.title}" has been approved and is now visible to applicants.',
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[job.company.email],
             fail_silently=True,
         )
     except Exception:
         pass
-    
+
     messages.success(request, f'Job "{job.title}" approved!')
     return redirect('jobs:admin_dashboard')

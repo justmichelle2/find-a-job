@@ -21,7 +21,7 @@ def register(request):
             return redirect('jobs:job_list')
     else:
         form = RegistrationForm()
-    
+
     return render(request, 'users/register.html', {'form': form})
 
 
@@ -31,14 +31,14 @@ def login_view(request):
     """
     if request.user.is_authenticated:
         return redirect('jobs:job_list')
-    
+
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
             user = authenticate(username=username, password=password)
-            
+
             if user is not None:
                 login(request, user)
                 messages.success(request, f'Welcome back, {user.username}!')
@@ -51,7 +51,7 @@ def login_view(request):
                 messages.error(request, 'Invalid username or password.')
     else:
         form = LoginForm()
-    
+
     return render(request, 'users/login.html', {'form': form})
 
 

@@ -9,8 +9,7 @@ class CustomUser(AbstractUser):
     """
     is_company = models.BooleanField(
         default=False,
-        help_text="Designates whether this user is a company/employer"
-    )
-    
+        help_text="Designates whether this user is a company/employer")
+
     def __str__(self):
         return self.username
