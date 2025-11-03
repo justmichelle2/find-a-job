@@ -154,10 +154,19 @@ def create_job_post(request):
     if request.method == 'POST':
         form = JobPostForm(request.POST, user=request.user)
         if form.is_valid():
-            job_post = form.save()
+            # Save but don't commit so we can set additional fields
+            job_post = form.save(commit=False)
+            # Ensure company is set (form.save normally handles this, but be explicit)
+            if request.user and not job_post.pk:
+                job_post.company = request.user
+            # Automatically mark newly created jobs as approved so they show up
+            # on the public job list/search page immediately.
+            job_post.is_approved = True
+            job_post.save()
+
             messages.success(
                 request,
-                f'Job post "{job_post.title}" has been created successfully! It will be visible to applicants once approved by an administrator.'
+                f'Job post "{job_post.title}" has been created successfully and is now visible to applicants.'
             )
             return redirect('jobs:company_dashboard')
     else:
