@@ -102,12 +102,17 @@
                             <td><span class="badge bg-secondary">{{ job.get_category_display }}</span></td>
                             <td>{{ job.date_posted|date:"M d, Y" }}</td>
                             <td>
-                                <a href="{% url 'jobs:approve_job' job.pk %}" class="btn btn-sm btn-success">
-                                    <i class="bi bi-check-circle"></i> Approve
-                                </a>
-                                <a href="{% url 'jobs:job_detail' job.pk %}" class="btn btn-sm btn-info">
-                                    <i class="bi bi-eye"></i> View
-                                </a>
+                                <div class="btn-group">
+                                    <a href="{% url 'jobs:approve_job' job.pk %}" class="btn btn-sm btn-success">
+                                        <i class="bi bi-check-circle"></i> Approve
+                                    </a>
+                                    <a href="{% url 'jobs:job_detail' job.pk %}" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                    <a href="{% url 'jobs:delete_job' job.pk %}" class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -153,7 +158,27 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="/admin/users/customuser/{{ u.pk }}/change/" class="btn btn-sm btn-primary">Open in Admin</a>
+                                {% if u.verification_status == 'V' %}
+                                    <div class="alert alert-success mb-0 py-2">
+                                        <i class="bi bi-check-circle-fill"></i> Account Verified
+                                    </div>
+                                {% elif u.verification_status == 'R' %}
+                                    <div class="alert alert-danger mb-0 py-2">
+                                        <i class="bi bi-x-circle-fill"></i> Account Rejected
+                                    </div>
+                                {% else %}
+                                    <div class="btn-group">
+                                        <a href="/admin/users/customuser/{{ u.pk }}/change/" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
+                                        <a href="{% url 'users:verify_user' u.pk 'V' %}" class="btn btn-sm btn-success">
+                                            <i class="bi bi-check-circle"></i> Verify
+                                        </a>
+                                        <a href="{% url 'users:verify_user' u.pk 'R' %}" class="btn btn-sm btn-danger">
+                                            <i class="bi bi-x-circle"></i> Reject
+                                        </a>
+                                    </div>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}

@@ -1,7 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import user_passes_test
+from django.core.mail import send_mail
+from django.conf import settings
 from .forms import RegistrationForm, LoginForm
 
 
@@ -63,3 +66,34 @@ def logout_view(request):
     logout(request)
     messages.info(request, 'You have been logged out successfully.')
     return redirect('jobs:job_list')
+
+@user_passes_test(lambda u: u.is_superuser)
+def verify_user(request, user_id, status):
+    """
+    Admin view to verify or reject a user's account
+    """
+    from .models import CustomUser
+    user = get_object_or_404(CustomUser, pk=user_id)
+    
+    if status not in [CustomUser.VERIFIED, CustomUser.REJECTED]:
+        messages.error(request, "Invalid verification status")
+        return redirect('jobs:admin_dashboard')
+    
+    user.verification_status = status
+    user.save()
+    
+    # Send email notification to user
+    status_text = "verified" if status == CustomUser.VERIFIED else "rejected"
+    try:
+        send_mail(
+            subject=f'Account Verification {status_text.capitalize()}',
+            message=f'Your account has been {status_text}. {"You can now post jobs." if status == CustomUser.VERIFIED else "Please contact support for more information."}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
+    except Exception:
+        pass
+    
+    messages.success(request, f"User {user.username} has been {status_text}.")
+    return redirect('jobs:admin_dashboard')

@@ -21,7 +21,11 @@ class JobListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        queryset = JobPost.objects.filter(is_approved=True)
+        # If user is admin, show all jobs, otherwise only show approved ones
+        if self.request.user.is_superuser:
+            queryset = JobPost.objects.all()
+        else:
+            queryset = JobPost.objects.filter(is_approved=True)
 
         # Search functionality
         search_query = self.request.GET.get('search')
@@ -158,7 +162,10 @@ def create_job_post(request):
         return redirect('jobs:job_list')
 
     # Require identity verification for companies to post jobs
-    if getattr(request.user, 'verification_status', None) != CustomUser.VERIFIED:
+    if request.user.verification_status == CustomUser.REJECTED:
+        messages.error(request, "Your account verification has been rejected. You cannot post jobs. Please contact support.")
+        return redirect('jobs:company_dashboard')
+    elif request.user.verification_status != CustomUser.VERIFIED:
         messages.warning(request, "Your account must be verified before posting jobs. Please wait for verification.")
         return redirect('jobs:company_dashboard')
 
@@ -170,9 +177,8 @@ def create_job_post(request):
             # Ensure company is set (form.save normally handles this, but be explicit)
             if request.user and not job_post.pk:
                 job_post.company = request.user
-            # Automatically mark newly created jobs as approved so they show up
-            # on the public job list/search page immediately.
-            job_post.is_approved = True
+            # Jobs require admin approval before being visible
+            job_post.is_approved = False
             job_post.save()
 
             messages.success(
@@ -254,8 +260,8 @@ def admin_dashboard(request):
     unapproved_jobs = JobPost.objects.filter(
         is_approved=False).select_related('company')
 
-    # Users pending verification
-    unverified_users = CustomUser.objects.filter(verification_status=CustomUser.PENDING)
+    # Get users by verification status
+    unverified_users = CustomUser.objects.exclude(verification_status__in=[CustomUser.VERIFIED, CustomUser.REJECTED])
 
     context = {
         'total_users': total_users,
