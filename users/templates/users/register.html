@@ -83,6 +83,7 @@
                         {% endif %}
                     </div>
 
+
                     <div class="mb-3">
                         <label class="form-label">Account Type</label>
                         <div>
@@ -91,6 +92,15 @@
                         {% if form.account_type.errors %}
                         <div class="text-danger small">{{ form.account_type.errors }}</div>
                         {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.institution.id_for_label }}" class="form-label">School or Company Name <span class="text-danger">*</span></label>
+                        {{ form.institution }}
+                        {% if form.institution.errors %}
+                        <div class="text-danger small">{{ form.institution.errors }}</div>
+                        {% endif %}
+                        <small class="text-muted">Enter your school or company name. Must be a recognized institution.</small>
                     </div>
 
                     <div class="mb-3">

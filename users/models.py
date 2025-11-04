@@ -6,6 +6,7 @@ class CustomUser(AbstractUser):
     """
     Extended user model with is_company flag to distinguish
     between students (job seekers) and companies (employers).
+    Adds institution field for ID validation.
     """
     is_company = models.BooleanField(
         default=False,
@@ -16,6 +17,12 @@ class CustomUser(AbstractUser):
         null=True,
         blank=True,
         help_text='Upload an identification document (image or PDF) for verification')
+    institution = models.CharField(
+        max_length=255,
+        help_text='Enter your school or company name for verification',
+        null=True,
+        blank=True
+    )
 
     PENDING = 'P'
     VERIFIED = 'V'

@@ -21,9 +21,14 @@ class JobListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        # If user is admin, show all jobs, otherwise only show approved ones
-        if self.request.user.is_superuser:
+        user = self.request.user
+        # Admin sees all jobs
+        if user.is_superuser:
             queryset = JobPost.objects.all()
+        # Company users see only their own jobs
+        elif user.is_authenticated and hasattr(user, 'is_company') and user.is_company:
+            queryset = JobPost.objects.filter(company=user)
+        # Students and anonymous users see only approved jobs
         else:
             queryset = JobPost.objects.filter(is_approved=True)
 
@@ -93,11 +98,11 @@ def apply_job(request, pk):
     """
     job = get_object_or_404(JobPost, pk=pk)
 
-    # Only non-company users can apply
-    if request.user.is_company:
+    # Only non-company users and non-admins can apply
+    if request.user.is_superuser or request.user.is_company:
         messages.warning(
             request,
-            "Companies cannot apply for jobs. Please log in as a student.")
+            "You are not allowed to apply for jobs with this account.")
         return redirect('jobs:job_detail', pk=pk)
 
     # Check if already applied
