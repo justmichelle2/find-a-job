@@ -1,7 +1,9 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate
-from .models import CustomUser
+from .models import CustomUser, EmailVerificationCode
+import random
+import string
 
 
 class RegistrationForm(UserCreationForm):

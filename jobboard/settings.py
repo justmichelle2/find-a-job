@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     # Custom apps
     'users',
     'jobs',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -70,6 +71,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                     # Notifications
                     'jobs.context_processors.notification_counts',
+                    'notifications.context_processors.notification_context',
             ],
         },
     },

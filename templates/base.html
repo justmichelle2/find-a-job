@@ -57,6 +57,16 @@
                         <a class="nav-link" href="{% url 'jobs:job_list' %}">Browse Jobs</a>
                     </li>
                     {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="{% url 'notifications:list' %}">
+                            <i class="bi bi-bell"></i> Notifications
+                            {% if notification_count %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    {{ notification_count }}
+                                </span>
+                            {% endif %}
+                        </a>
+                    </li>
                     {% if user.is_superuser %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'jobs:admin_dashboard' %}">

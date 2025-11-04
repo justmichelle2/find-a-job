@@ -9,6 +9,8 @@ from django.conf import settings
 from .models import JobPost, Application
 from .forms import JobPostForm, ApplicationForm
 from users.models import CustomUser
+from notifications.utils import create_notification
+from notifications.models import Notification
 
 
 class JobListView(ListView):
@@ -124,6 +126,16 @@ def apply_job(request, pk):
             except Exception:
                 pass
 
+            # Create notification for company
+            create_notification(
+                recipient=job.company,
+                notification_type=Notification.APPLICATION_SUBMITTED,
+                title=f"New application for {job.title}",
+                message=f"{request.user.username} has applied for the position of {job.title}",
+                related_job=job,
+                related_application=application
+            )
+
             try:
                 send_mail(
                     subject=f'New Application for {job.title}',
@@ -185,6 +197,16 @@ def create_job_post(request):
             # Jobs require admin approval before being visible
             job_post.is_approved = False
             job_post.save()
+
+            # Create notification for admins
+            for admin in CustomUser.objects.filter(is_superuser=True):
+                create_notification(
+                    recipient=admin,
+                    notification_type=Notification.JOB_POSTED,
+                    title=f"New job post: {job_post.title}",
+                    message=f"Company {request.user.username} has posted a new job: {job_post.title}. Please review for approval.",
+                    related_job=job_post
+                )
 
             messages.success(
                 request,
@@ -380,6 +402,11 @@ def update_application_status(request, pk, status):
             "You don't have permission to update this application.")
 
     if status in ['A', 'R']:
+        # Accept optional custom message from POST data
+        custom_message = ''
+        if request.method == 'POST':
+            custom_message = request.POST.get('message', '').strip()
+
         application.status = status
         # When company updates status, set applicant_unread so applicant sees notification
         application.applicant_unread = True
@@ -387,11 +414,36 @@ def update_application_status(request, pk, status):
 
         status_text = 'Accepted' if status == 'A' else 'Rejected'
 
+        # Create notification for applicant
+        create_notification(
+            recipient=application.applicant,
+            notification_type=Notification.APPLICATION_STATUS_CHANGED,
+            title=f"Application {status_text}: {application.job.title}",
+            message=f"Your application for {application.job.title} has been {status_text}." +
+                    (f"\n\nMessage from {request.user.username}:\n{custom_message}" if custom_message else ""),
+            related_job=application.job,
+            related_application=application
+        )
+
+        # Build the email body; include custom message if provided
+        if custom_message:
+            email_body = (
+                f'Hello {application.applicant.username},\n\n'
+                f'Your application for "{application.job.title}" has been {status_text}.\n\n'
+                f'Message from {request.user.username}:\n{custom_message}\n\n'
+                'Regards,\nCampus Job Board'
+            )
+        else:
+            email_body = (
+                f'Hello {application.applicant.username},\n\n'
+                f'Your application for "{application.job.title}" has been {status_text}.\n\n'
+                'Regards,\nCampus Job Board'
+            )
+
         try:
             send_mail(
                 subject=f'Application Update: {application.job.title}',
-                message=
-                f'Your application for {application.job.title} has been {status_text}.',
+                message=email_body,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[application.applicant.email],
                 fail_silently=True,
@@ -485,6 +537,15 @@ def approve_job(request, pk):
     job = get_object_or_404(JobPost, pk=pk)
     job.is_approved = True
     job.save()
+
+    # Create notification for company
+    create_notification(
+        recipient=job.company,
+        notification_type=Notification.JOB_APPROVED,
+        title=f"Job Approved: {job.title}",
+        message=f"Your job post for {job.title} has been approved and is now visible to applicants.",
+        related_job=job
+    )
 
     try:
         send_mail(

@@ -143,8 +143,16 @@
                                     </td>
                                     <td>
                                         {% if app.status == 'P' %}
-                                        <a href="{% url 'jobs:update_application_status' app.pk 'A' %}" class="btn btn-sm btn-success">Accept</a>
-                                        <a href="{% url 'jobs:update_application_status' app.pk 'R' %}" class="btn btn-sm btn-danger">Reject</a>
+                                        <form method="post" action="{% url 'jobs:update_application_status' app.pk 'A' %}" class="d-inline-block me-1">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="message" value="">
+                                            <button type="submit" class="btn btn-sm btn-success">Accept</button>
+                                        </form>
+                                        <form method="post" action="{% url 'jobs:update_application_status' app.pk 'R' %}" class="d-inline-block">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="message" value="">
+                                            <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                        </form>
                                         {% endif %}
                                     </td>
                                 </tr>

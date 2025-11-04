@@ -1,5 +1,35 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
+from datetime import timedelta
+
+
+class EmailVerificationCode(models.Model):
+    """
+    Model to store temporary email verification codes for registration.
+    """
+    email = models.EmailField(unique=True)
+    code = models.CharField(max_length=6)  # 6-digit verification code
+    data = models.JSONField(help_text="Temporarily stored registration data")
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            # Code expires after 10 minutes
+            self.expires_at = timezone.now() + timedelta(minutes=10)
+        super().save(*args, **kwargs)
+
+    def is_valid(self):
+        return not self.is_used and timezone.now() <= self.expires_at
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['email']),
+            models.Index(fields=['code']),
+            models.Index(fields=['is_used']),
+        ]
 
 
 class CustomUser(AbstractUser):
@@ -39,6 +69,11 @@ class CustomUser(AbstractUser):
         choices=VERIFICATION_STATUS_CHOICES,
         default=PENDING,
         help_text='Status of identity verification')
+
+    # Email verification flag
+    email_verified = models.BooleanField(
+        default=False,
+        help_text='Whether the user has verified their email address')
 
     def __str__(self):
         return self.username
