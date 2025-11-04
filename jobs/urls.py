@@ -20,6 +20,7 @@ urlpatterns = [
     path('application/<int:pk>/status/<str:status>/',
          views.update_application_status,
          name='update_application_status'),
+     path('application/<int:pk>/view/', views.view_application_and_mark, name='view_application'),
     path('job/<int:pk>/edit/', views.edit_job, name='edit_job'),
     path('job/<int:pk>/delete/', views.delete_job, name='delete_job'),
     path('job/<int:pk>/approve/', views.approve_job, name='approve_job'),

@@ -11,15 +11,33 @@ class RegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True, max_length=254)
     first_name = forms.CharField(max_length=30, required=False)
     last_name = forms.CharField(max_length=30, required=False)
-    is_company = forms.BooleanField(
-        required=False,
-        label="I am a company/employer",
-        help_text="Check this if you want to post jobs")
+    ACCOUNT_CHOICES = (
+        ('student', 'I am a student'),
+        ('company', 'I am a company/employer'),
+    )
+
+    account_type = forms.ChoiceField(
+        choices=ACCOUNT_CHOICES,
+        widget=forms.RadioSelect,
+        label='Account Type')
+
+    id_document = forms.FileField(
+        required=True,
+        widget=forms.FileInput(attrs={'class': 'form-control'}),
+        help_text='Upload an ID (image or PDF) for verification')
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'first_name', 'last_name', 'is_company',
-                  'password1', 'password2')
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'account_type',
+            'id_document',
+            'password1',
+            'password2',
+        )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -32,7 +50,12 @@ class RegistrationForm(UserCreationForm):
         user.email = self.cleaned_data['email']
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
-        user.is_company = self.cleaned_data['is_company']
+        user.is_company = True if self.cleaned_data.get('account_type') == 'company' else False
+        # Attach uploaded ID document and set verification to pending
+        id_doc = self.cleaned_data.get('id_document')
+        if id_doc:
+            user.id_document = id_doc
+            user.verification_status = CustomUser.PENDING
         if commit:
             user.save()
         return user

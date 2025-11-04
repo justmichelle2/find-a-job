@@ -108,6 +108,12 @@ def apply_job(request, pk):
                                job=job)
         if form.is_valid():
             application = form.save()
+            # Ensure company sees this as an unread notification
+            try:
+                application.company_unread = True
+                application.save()
+            except Exception:
+                pass
 
             try:
                 send_mail(
@@ -151,6 +157,11 @@ def create_job_post(request):
         messages.warning(request, "Only companies can post jobs.")
         return redirect('jobs:job_list')
 
+    # Require identity verification for companies to post jobs
+    if getattr(request.user, 'verification_status', None) != CustomUser.VERIFIED:
+        messages.warning(request, "Your account must be verified before posting jobs. Please wait for verification.")
+        return redirect('jobs:company_dashboard')
+
     if request.method == 'POST':
         form = JobPostForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
@@ -185,10 +196,24 @@ def my_applications(request):
         jobs = JobPost.objects.filter(company=request.user)
         applications = Application.objects.filter(job__in=jobs).select_related(
             'applicant', 'job')
+        # Mark company notifications as read when viewing applications
+        try:
+            Application.objects.filter(job__company=request.user,
+                                       company_unread=True).update(
+                company_unread=False)
+        except Exception:
+            pass
     else:
         # Students see their own applications
         applications = Application.objects.filter(
             applicant=request.user).select_related('job')
+        # Mark applicant notifications as read when viewing their applications
+        try:
+            Application.objects.filter(applicant=request.user,
+                                       applicant_unread=True).update(
+                applicant_unread=False)
+        except Exception:
+            pass
 
     return render(request, 'jobs/my_applications.html',
                   {'applications': applications})
@@ -229,6 +254,9 @@ def admin_dashboard(request):
     unapproved_jobs = JobPost.objects.filter(
         is_approved=False).select_related('company')
 
+    # Users pending verification
+    unverified_users = CustomUser.objects.filter(verification_status=CustomUser.PENDING)
+
     context = {
         'total_users': total_users,
         'total_students': total_students,
@@ -239,6 +267,7 @@ def admin_dashboard(request):
         'total_applications': total_applications,
         'pending_applications': pending_applications,
         'unapproved_jobs': unapproved_jobs,
+        'unverified_users': unverified_users,
     }
 
     return render(request, 'jobs/admin_dashboard.html', context)
@@ -267,6 +296,14 @@ def company_dashboard(request):
     recent_applications = Application.objects.filter(
         job__company=request.user).select_related(
             'applicant', 'job').order_by('-date_applied')[:5]
+
+    # Mark company notifications as read when visiting the company dashboard
+    try:
+        Application.objects.filter(job__company=request.user,
+                                   company_unread=True).update(
+            company_unread=False)
+    except Exception:
+        pass
 
     context = {
         'total_jobs': total_jobs,
@@ -309,6 +346,14 @@ def student_dashboard(request):
         'recent_jobs': recent_jobs,
     }
 
+    # Mark applicant notifications as read when visiting student dashboard
+    try:
+        Application.objects.filter(applicant=request.user,
+                                   applicant_unread=True).update(
+            applicant_unread=False)
+    except Exception:
+        pass
+
     return render(request, 'jobs/student_dashboard.html', context)
 
 
@@ -325,6 +370,8 @@ def update_application_status(request, pk, status):
 
     if status in ['A', 'R']:
         application.status = status
+        # When company updates status, set applicant_unread so applicant sees notification
+        application.applicant_unread = True
         application.save()
 
         status_text = 'Accepted' if status == 'A' else 'Rejected'
@@ -345,6 +392,33 @@ def update_application_status(request, pk, status):
                          f'Application {status_text.lower()} successfully!')
 
     return redirect(request.META.get('HTTP_REFERER', 'jobs:my_applications'))
+
+
+@login_required
+def view_application_and_mark(request, pk):
+    """Mark a single application as read for the current user and redirect to job detail."""
+    application = get_object_or_404(Application, pk=pk)
+
+    user = request.user
+    # If company viewing an application for their job, mark company_unread False
+    if user.is_authenticated and user.is_company and application.job.company == user:
+        try:
+            if application.company_unread:
+                application.company_unread = False
+                application.save()
+        except Exception:
+            pass
+
+    # If applicant viewing their own application, mark applicant_unread False
+    if user.is_authenticated and not user.is_company and application.applicant == user:
+        try:
+            if application.applicant_unread:
+                application.applicant_unread = False
+                application.save()
+        except Exception:
+            pass
+
+    return redirect('jobs:job_detail', pk=application.job.pk)
 
 
 @login_required

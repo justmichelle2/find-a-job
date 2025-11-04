@@ -115,7 +115,7 @@
                                 {% for app in recent_applications %}
                                 <tr>
                                     <td>{{ app.applicant.username }}</td>
-                                    <td><a href="{% url 'jobs:job_detail' app.job.pk %}">{{ app.job.title }}</a></td>
+                                    <td><a href="{% url 'jobs:view_application' app.pk %}">{{ app.job.title }}</a></td>
                                     <td>{{ app.date_applied|date:"M d, Y" }}</td>
                                     <td>
                                         {% if app.status == 'P' %}

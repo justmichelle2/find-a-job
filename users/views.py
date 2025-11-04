@@ -10,7 +10,7 @@ def register(request):
     Function-based view for user registration.
     """
     if request.method == 'POST':
-        form = RegistrationForm(request.POST)
+        form = RegistrationForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
             messages.success(

@@ -158,6 +158,13 @@ class Application(models.Model):
     status = models.CharField(max_length=1,
                               choices=STATUS_CHOICES,
                               default=PENDING)
+    # Notification flags
+    company_unread = models.BooleanField(
+        default=True,
+        help_text="Whether the company has an unread notification for this application")
+    applicant_unread = models.BooleanField(
+        default=False,
+        help_text="Whether the applicant has an unread notification for status updates")
 
     class Meta:
         ordering = ['-date_applied']

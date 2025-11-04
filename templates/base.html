@@ -90,8 +90,13 @@
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i> {{ user.username }}
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i> {{ user.username }}
+                            {% if user.is_company and company_unread_count > 0 %}
+                                <span class="badge bg-danger ms-2">{{ company_unread_count }}</span>
+                            {% elif not user.is_company and applicant_unread_count > 0 %}
+                                <span class="badge bg-danger ms-2">{{ applicant_unread_count }}</span>
+                            {% endif %}
                         </a>
                         <ul class="dropdown-menu">
                             <li><span class="dropdown-item-text">
