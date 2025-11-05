@@ -70,10 +70,15 @@ class CustomUser(AbstractUser):
         default=PENDING,
         help_text='Status of identity verification')
 
-    # Email verification flag
+    # Email verification fields
     email_verified = models.BooleanField(
         default=False,
         help_text='Whether the user has verified their email address')
+    email_verification_token = models.CharField(
+        max_length=6,
+        null=True,
+        blank=True,
+        help_text='Temporary token for email verification')
 
     def __str__(self):
         return self.username

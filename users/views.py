@@ -21,7 +21,7 @@ def generate_verification_code():
     return ''.join(random.choices(string.digits, k=6))
 
 
-def verify_email(request):
+def start_email_verification(request):
     """View to start email verification process"""
     if request.method == 'POST':
         form = EmailVerificationForm(request.POST)
@@ -59,7 +59,7 @@ def verify_email(request):
     else:
         form = EmailVerificationForm()
 
-    return render(request, 'users/verify_email.html', {'form': form})
+    return render(request, 'users/start_verification.html', {'form': form})
 
 
 def verify_code(request):
@@ -67,7 +67,7 @@ def verify_code(request):
     pending_email = request.session.get('pending_email')
     if not pending_email:
         messages.error(request, "Please start the verification process again.")
-        return redirect('users:verify_email')
+        return redirect('users:start_verification')
 
     if request.method == 'POST':
         form = VerifyCodeForm(request.POST)
@@ -93,7 +93,7 @@ def verify_code(request):
                     return redirect('users:register')
                 else:
                     messages.error(request, "Verification code has expired. Please request a new one.")
-                    return redirect('users:verify_email')
+                    return redirect('users:start_verification')
             except EmailVerificationCode.DoesNotExist:
                 messages.error(request, "Invalid verification code. Please try again.")
         else:
@@ -110,30 +110,36 @@ def register(request):
     """
     Function-based view for user registration.
     """
-    # Check if there is a valid email verification code in session
-    verified_email = request.session.get('verified_email')
-    stored_data = request.session.get('registration_data', {})
-
-    if not verified_email:
-        messages.warning(request, "Please verify your email address first.")
-        return redirect('users:verify_email')
-
     if request.method == 'POST':
         form = RegistrationForm(request.POST, request.FILES)
         if form.is_valid():
-            if form.cleaned_data.get('email') != verified_email:
-                messages.error(request, "Please use the verified email address.")
-                return render(request, 'users/register.html', {'form': form})
-
             user = form.save()
-            user.email_verified = True  # Email is pre-verified
+            
+            # Generate verification code
+            verification_code = ''.join(random.choices(string.digits, k=6))
+            user.email_verification_token = verification_code
             user.save()
 
-            messages.success(request, f'Account created successfully! You can now log in.')
-            return redirect('users:login')
+            # Send verification email
+            try:
+                send_mail(
+                    subject='Verify your Campus Job Board email',
+                    message=f'Hello {user.username},\n\nYour email verification code is: {verification_code}\n\nPlease enter this code to verify your email address.',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+
+            # Log the user in
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            login(request, user)
+
+            messages.success(request, 'Account created successfully! Please verify your email address.')
+            return redirect('users:verify_code')
     else:
-        # Pre-fill the form with stored data if available
-        form = RegistrationForm(initial=stored_data)
+        form = RegistrationForm()
 
     return render(request, 'users/register.html', {'form': form})
 
