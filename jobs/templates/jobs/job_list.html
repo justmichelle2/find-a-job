@@ -9,7 +9,7 @@
         <p class="text-muted">Browse through available opportunities and find the perfect match for your career.</p>
     </div>
     <div class="col-md-4 text-end">
-        {% if user.is_authenticated and user.is_company %}
+        {% if user.is_authenticated and user.is_company and user.verification_status == 'V' %}
             <a href="{% url 'jobs:create_job' %}" class="btn btn-success">
                 <i class="bi bi-plus-circle"></i> Post a Job
             </a>

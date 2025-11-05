@@ -13,6 +13,16 @@ from notifications.utils import create_notification
 from notifications.models import Notification
 
 
+def landing_page(request):
+    """Landing page view with platform statistics"""
+    context = {
+        'job_count': JobPost.objects.filter(is_approved=True).count(),
+        'company_count': CustomUser.objects.filter(is_company=True, verification_status=CustomUser.VERIFIED).count(),
+        'student_count': CustomUser.objects.filter(is_company=False).count(),
+    }
+    return render(request, 'jobs/landing.html', context)
+
+
 class JobListView(ListView):
     """
     Class-based view to display all available job posts with search and filtering.
@@ -105,6 +115,11 @@ def apply_job(request, pk):
         messages.warning(
             request,
             "You are not allowed to apply for jobs with this account.")
+        return redirect('jobs:job_detail', pk=pk)
+
+    # Require admin verification before applying
+    if getattr(request.user, 'verification_status', None) != CustomUser.VERIFIED:
+        messages.warning(request, "Your account must be verified by an administrator before you can apply for jobs.")
         return redirect('jobs:job_detail', pk=pk)
 
     # Check if already applied

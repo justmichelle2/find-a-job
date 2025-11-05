@@ -15,12 +15,28 @@
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
 
-                    {% if form.non_field_errors %}
+                    {% if form.errors %}
                     <div class="alert alert-danger">
-                        {{ form.non_field_errors }}
+                        <strong>Please correct the following errors:</strong>
+                        <ul class="mb-0 mt-2">
+                        {% for field in form %}
+                            {% if field.errors %}
+                                {% for error in field.errors %}
+                                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if form.non_field_errors %}
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endif %}
+                        </ul>
                     </div>
                     {% endif %}
 
+                    {% comment %} Username handling: for companies the username will be set to the institution server-side. {% endcomment %}
+                    {% if account_choice != 'company' %}
                     <div class="mb-3">
                         <label for="{{ form.username.id_for_label }}" class="form-label">
                             Username <span class="text-danger">*</span>
@@ -30,6 +46,11 @@
                         <div class="text-danger small">{{ form.username.errors }}</div>
                         {% endif %}
                     </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <label class="form-label">Company account: your username will be set to the company/school name you provide.</label>
+                    </div>
+                    {% endif %}
 
                     <div class="mb-3">
                         <label for="{{ form.email.id_for_label }}" class="form-label">
@@ -41,6 +62,7 @@
                         {% endif %}
                     </div>
 
+                    {% if account_choice != 'company' %}
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="{{ form.first_name.id_for_label }}" class="form-label">
@@ -62,6 +84,7 @@
                             {% endif %}
                         </div>
                     </div>
+                    {% endif %}
 
                     <div class="mb-3">
                         <label for="{{ form.password1.id_for_label }}" class="form-label">
@@ -71,6 +94,18 @@
                         {% if form.password1.errors %}
                         <div class="text-danger small">{{ form.password1.errors }}</div>
                         {% endif %}
+                    </div>
+
+                    <!-- Password requirements live feedback -->
+                    <div id="pw-requirements" class="mb-3 small">
+                        <p id="pw-msg" class="mb-1 text-danger">Password must: include uppercase and lowercase letters, numbers, symbols and be at least 8 characters.</p>
+                        <ul class="list-unstyled mb-0">
+                            <li id="pw-length" class="text-danger">• 8 or more characters</li>
+                            <li id="pw-upper" class="text-danger">• At least one uppercase letter (A-Z)</li>
+                            <li id="pw-lower" class="text-danger">• At least one lowercase letter (a-z)</li>
+                            <li id="pw-number" class="text-danger">• At least one number (0-9)</li>
+                            <li id="pw-symbol" class="text-danger">• At least one symbol (e.g. !@#$%)</li>
+                        </ul>
                     </div>
 
                     <div class="mb-3">
@@ -84,15 +119,35 @@
                     </div>
 
 
-                    <div class="mb-3">
-                        <label class="form-label">Account Type</label>
-                        <div>
-                            {{ form.account_type }}
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.country_code.id_for_label }}" class="form-label">Country Code <span class="text-danger">*</span></label>
+                            {{ form.country_code }}
+                            {% if form.country_code.errors %}
+                            <div class="text-danger small">{{ form.country_code.errors }}</div>
+                            {% endif %}
                         </div>
-                        {% if form.account_type.errors %}
-                        <div class="text-danger small">{{ form.account_type.errors }}</div>
-                        {% endif %}
+
+                        <div class="col-md-8 mb-3">
+                            <label for="{{ form.phone_number_local.id_for_label }}" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                            {{ form.phone_number_local }}
+                            {% if form.phone_number_local.errors %}
+                            <div class="text-danger small">{{ form.phone_number_local.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Enter the rest of your number without the country code.</small>
+                        </div>
                     </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.prefer_phone_verification }}
+                        <label class="form-check-label" for="{{ form.prefer_phone_verification.id_for_label }}">{{ form.prefer_phone_verification.label }}</label>
+                        {% if form.prefer_phone_verification.errors %}
+                        <div class="text-danger small">{{ form.prefer_phone_verification.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">{{ form.prefer_phone_verification.help_text }}</div>
+                    </div>
+
+                    {# account type is selected on a separate page; removed from this form #}
 
                     <div class="mb-3">
                         <label for="{{ form.institution.id_for_label }}" class="form-label">School or Company Name <span class="text-danger">*</span></label>
@@ -112,7 +167,7 @@
                         <small class="text-muted">Upload an ID (photo or PDF). Required for account verification.</small>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                    <button id="register-btn" type="submit" class="btn btn-primary w-100 mb-3" disabled>
                         <i class="bi bi-person-plus"></i> Register
                     </button>
                 </form>
@@ -127,4 +182,60 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Password live validation script
+document.addEventListener('DOMContentLoaded', function(){
+    const pwInput = document.getElementById('{{ form.password1.id_for_label }}') || document.getElementById('id_password1');
+    const pwLength = document.getElementById('pw-length');
+    const pwUpper = document.getElementById('pw-upper');
+    const pwLower = document.getElementById('pw-lower');
+    const pwNumber = document.getElementById('pw-number');
+    const pwSymbol = document.getElementById('pw-symbol');
+    const pwMsg = document.getElementById('pw-msg');
+    const registerBtn = document.getElementById('register-btn');
+
+    function validatePw() {
+        const v = pwInput.value || '';
+        let ok = true;
+
+        if (v.length >= 8) {
+            pwLength.classList.remove('text-danger'); pwLength.classList.add('text-success');
+        } else { pwLength.classList.add('text-danger'); pwLength.classList.remove('text-success'); ok = false }
+
+        if (/[A-Z]/.test(v)) {
+            pwUpper.classList.remove('text-danger'); pwUpper.classList.add('text-success');
+        } else { pwUpper.classList.add('text-danger'); pwUpper.classList.remove('text-success'); ok = false }
+
+        if (/[a-z]/.test(v)) {
+            pwLower.classList.remove('text-danger'); pwLower.classList.add('text-success');
+        } else { pwLower.classList.add('text-danger'); pwLower.classList.remove('text-success'); ok = false }
+
+        if (/\d/.test(v)) {
+            pwNumber.classList.remove('text-danger'); pwNumber.classList.add('text-success');
+        } else { pwNumber.classList.add('text-danger'); pwNumber.classList.remove('text-success'); ok = false }
+
+        if (/[^A-Za-z0-9]/.test(v)) {
+            pwSymbol.classList.remove('text-danger'); pwSymbol.classList.add('text-success');
+        } else { pwSymbol.classList.add('text-danger'); pwSymbol.classList.remove('text-success'); ok = false }
+
+        if (ok) {
+            pwMsg.classList.remove('text-danger'); pwMsg.classList.add('text-success');
+            pwMsg.textContent = 'Password requirements met. You may proceed.';
+            registerBtn.disabled = false;
+        } else {
+            pwMsg.classList.add('text-danger'); pwMsg.classList.remove('text-success');
+            pwMsg.textContent = 'Password must: include letters, numbers, symbols and be at least 8 characters.';
+            registerBtn.disabled = true;
+        }
+    }
+
+    if (pwInput) {
+        validatePw();
+        pwInput.addEventListener('input', validatePw);
+    }
+});
+</script>
 {% endblock %}

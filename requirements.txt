@@ -1,5 +1,5 @@
 Django>=5.0.0,<6.0.0
-
-Django
+twilio>=8.10.0
+sendgrid>=6.10.0
 gunicorn
 Pillow

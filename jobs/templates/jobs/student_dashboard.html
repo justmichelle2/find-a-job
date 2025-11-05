@@ -7,6 +7,21 @@
 <div class="container my-5">
     <h1 class="mb-4"><i class="bi bi-person-circle"></i> Student Dashboard</h1>
     
+    {% if user.verification_status != 'V' %}
+    <div class="alert alert-warning mb-4">
+        <h4 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Account Verification Required</h4>
+        {% if user.verification_status == 'P' %}
+            <p class="mb-0">Your account is pending verification. You'll be able to apply for jobs once an administrator verifies your account.</p>
+            {% if not user.id_document %}
+            <hr>
+            <p class="mb-0">Please upload your identification document to speed up verification.</p>
+            {% endif %}
+        {% elif user.verification_status == 'R' %}
+            <p class="mb-0">Your account verification was rejected. Please contact support for more information.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+    
     <div class="row g-4 mb-5">
         <div class="col-md-3">
             <div class="card bg-primary text-white h-100">

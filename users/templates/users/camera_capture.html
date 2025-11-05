@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Take Profile Photo - Campus Job Board{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title text-center mb-4">Take Your Profile Photo</h4>
+                
+                <!-- Permission and camera status messages -->
+                <div id="camera-status" class="alert alert-info mb-3">
+                    Requesting camera access...
+                </div>
+
+                <!-- Camera view -->
+                <div class="text-center mb-3">
+                    <video id="camera-preview" class="img-fluid d-none" autoplay playsinline></video>
+                    <canvas id="photo-canvas" class="d-none"></canvas>
+                    <img id="captured-photo" class="img-fluid mb-3 d-none" alt="Captured photo">
+                </div>
+
+                <!-- Camera controls -->
+                <div class="d-grid gap-2">
+                    <button id="capture-btn" class="btn btn-primary d-none">
+                        <i class="bi bi-camera"></i> Take Photo
+                    </button>
+                    <button id="retake-btn" class="btn btn-secondary d-none">
+                        <i class="bi bi-arrow-repeat"></i> Retake
+                    </button>
+                    <form id="save-photo-form" method="post" class="d-none">
+                        {% csrf_token %}
+                        <input type="hidden" name="photo_data" id="photo-data">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-check-lg"></i> Use This Photo
+                        </button>
+                    </form>
+                </div>
+
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i> Tips:
+                        <ul class="mb-0">
+                            <li>Ensure good lighting</li>
+                            <li>Face the camera directly</li>
+                            <li>Keep a neutral background</li>
+                            <li>This photo will be compared with your ID for verification</li>
+                        </ul>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cameraPreview = document.getElementById('camera-preview');
+    const photoCanvas = document.getElementById('photo-canvas');
+    const capturedPhoto = document.getElementById('captured-photo');
+    const captureBtn = document.getElementById('capture-btn');
+    const retakeBtn = document.getElementById('retake-btn');
+    const saveForm = document.getElementById('save-photo-form');
+    const statusDiv = document.getElementById('camera-status');
+    let stream = null;
+
+    // Request camera access
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'user',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            });
+            cameraPreview.srcObject = stream;
+            cameraPreview.classList.remove('d-none');
+            captureBtn.classList.remove('d-none');
+            statusDiv.classList.replace('alert-info', 'alert-success');
+            statusDiv.textContent = 'Camera ready! Take your photo.';
+        } catch (err) {
+            console.error('Camera error:', err);
+            statusDiv.classList.replace('alert-info', 'alert-danger');
+            statusDiv.textContent = 'Could not access camera. Please ensure you\'ve granted camera permissions.';
+        }
+    }
+
+    // Take photo
+    captureBtn.addEventListener('click', function() {
+        // Draw video frame to canvas
+        photoCanvas.width = cameraPreview.videoWidth;
+        photoCanvas.height = cameraPreview.videoHeight;
+        photoCanvas.getContext('2d').drawImage(cameraPreview, 0, 0);
+
+        // Convert to image and display
+        capturedPhoto.src = photoCanvas.toDataURL('image/jpeg', 0.8);
+        capturedPhoto.classList.remove('d-none');
+        cameraPreview.classList.add('d-none');
+        captureBtn.classList.add('d-none');
+        retakeBtn.classList.remove('d-none');
+        saveForm.classList.remove('d-none');
+
+        // Store in hidden form field
+        document.getElementById('photo-data').value = capturedPhoto.src;
+    });
+
+    // Retake photo
+    retakeBtn.addEventListener('click', function() {
+        capturedPhoto.classList.add('d-none');
+        cameraPreview.classList.remove('d-none');
+        captureBtn.classList.remove('d-none');
+        retakeBtn.classList.add('d-none');
+        saveForm.classList.add('d-none');
+    });
+
+    // Clean up on page leave
+    window.addEventListener('beforeunload', function() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    });
+
+    // Start camera when page loads
+    startCamera();
+});
+</script>
+{% endblock %}

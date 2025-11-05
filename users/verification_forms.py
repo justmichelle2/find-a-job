@@ -21,3 +21,17 @@ class VerifyCodeForm(forms.Form):
             'placeholder': 'Enter 6-digit code'
         })
     )
+
+class ChooseVerificationMethodForm(forms.Form):
+    """Form to choose between email or SMS verification"""
+    VERIFICATION_CHOICES = [
+        ('email', 'Email'),
+        ('sms', 'SMS (Text Message)'),
+    ]
+    
+    verification_method = forms.ChoiceField(
+        choices=VERIFICATION_CHOICES,
+        widget=forms.RadioSelect,
+        initial='email',
+        label='How would you like to receive your verification code?'
+    )

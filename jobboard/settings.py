@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -145,6 +146,31 @@ LOGIN_URL = 'users:login'
 LOGIN_REDIRECT_URL = 'jobs:job_list'
 LOGOUT_REDIRECT_URL = 'jobs:job_list'
 
-# Email Configuration (Console backend for development)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'noreply@campusjobboard.com'
+# Email / SMS Configuration using environment variables
+
+# Default from address
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@campusjobboard.com')
+
+# If a SENDGRID_API_KEY is provided we attempt to use SMTP (SendGrid) otherwise
+# fall back to the console backend for development.
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
+if SENDGRID_API_KEY:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.sendgrid.net')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes')
+    # For SendGrid SMTP the username is literally 'apikey' and the password is the API key
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'apikey')
+    EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+else:
+    # Console backend is safe for local development and tests
+    EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+
+# Twilio configuration (optional)
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
+TWILIO_FROM_NUMBER = os.environ.get('TWILIO_FROM_NUMBER', '')
+
+# Verification rate-limits (env configurable)
+VERIFICATION_RESEND_INTERVAL_SECONDS = int(os.environ.get('VERIFICATION_RESEND_INTERVAL_SECONDS', '60'))
+VERIFICATION_MAX_PER_HOUR = int(os.environ.get('VERIFICATION_MAX_PER_HOUR', '5'))

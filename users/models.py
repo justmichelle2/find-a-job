@@ -80,5 +80,60 @@ class CustomUser(AbstractUser):
         blank=True,
         help_text='Temporary token for email verification')
 
+    # Phone fields
+    phone_number = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        unique=False,
+        help_text='Phone number in international format, e.g. +14155552671')
+
+    phone_verified = models.BooleanField(
+        default=False,
+        help_text='Whether the user has verified their phone number')
+
     def __str__(self):
         return self.username
+
+
+class PhoneVerificationCode(models.Model):
+    """
+    Temporary model to store phone verification codes (SMS fallback).
+    """
+    phone = models.CharField(max_length=20, db_index=True)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        from django.utils import timezone
+        from datetime import timedelta
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(minutes=10)
+        super().save(*args, **kwargs)
+
+    def is_valid(self):
+        from django.utils import timezone
+        return not self.is_used and timezone.now() <= self.expires_at
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['phone']),
+            models.Index(fields=['code']),
+            models.Index(fields=['is_used']),
+        ]
+
+
+class SentEmail(models.Model):
+    """
+    Dev-only helper to store sent emails for preview in the browser.
+    Do not enable/ship in production environments without access control.
+    """
+    to_email = models.EmailField()
+    subject = models.CharField(max_length=255)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']

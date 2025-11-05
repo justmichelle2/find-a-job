@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Choose Account Type{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3 class="mb-4">Create an account</h3>
+                <p class="text-muted mb-4">Choose whether you're registering as a Student or a Company.</p>
+
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'users:register' %}?type=student" class="btn btn-outline-primary btn-lg">I'm a Student</a>
+                    <a href="{% url 'users:register' %}?type=company" class="btn btn-primary btn-lg">I'm a Company</a>
+                </div>
+
+                <hr class="my-4">
+                <p class="text-muted small">You will be guided to a tailored sign-up form for your choice.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

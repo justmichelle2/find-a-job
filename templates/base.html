@@ -45,7 +45,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'jobs:job_list' %}">
+            <a class="navbar-brand" href="{% url 'jobs:landing' %}">
                 <i class="bi bi-briefcase-fill"></i> Campus Job Board
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -56,7 +56,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'jobs:job_list' %}">Browse Jobs</a>
                     </li>
-                    {% if user.is_authenticated %}
+                    {% if user.is_authenticated and user.is_superuser %}
                     <li class="nav-item">
                         <a class="nav-link position-relative" href="{% url 'notifications:list' %}">
                             <i class="bi bi-bell"></i> Notifications
@@ -67,13 +67,23 @@
                             {% endif %}
                         </a>
                     </li>
-                    {% if user.is_superuser %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'jobs:admin_dashboard' %}">
                             <i class="bi bi-speedometer2"></i> Admin Dashboard
                         </a>
                     </li>
-                    {% elif user.is_company %}
+                    {% elif user.is_authenticated and user.email_verified and user.verification_status == 'V' %}
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="{% url 'notifications:list' %}">
+                            <i class="bi bi-bell"></i> Notifications
+                            {% if notification_count %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    {{ notification_count }}
+                                </span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    {% if user.is_company %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'jobs:company_dashboard' %}">
                             <i class="bi bi-grid"></i> Dashboard

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="none"/>
+  <!-- Laptop / Job search motif -->
+  <g transform="translate(120,80)">
+    <rect x="40" y="40" width="520" height="320" rx="18" fill="#fff" stroke="#e6eefc" stroke-width="3"/>
+    <rect x="68" y="72" width="464" height="240" rx="8" fill="url(#g)" opacity="0.12"/>
+    <!-- screen content: search box and briefcase icon -->
+    <rect x="100" y="120" width="360" height="44" rx="8" fill="#fff" stroke="#dbeafe"/>
+    <circle cx="128" cy="142" r="8" fill="#c7e2ff"/>
+    <rect x="100" y="184" width="120" height="90" rx="12" fill="#fff" stroke="#dbeafe"/>
+    <!-- briefcase small -->
+    <rect x="140" y="200" width="48" height="30" rx="4" fill="#60a5fa"/>
+    <rect x="154" y="190" width="20" height="12" rx="3" fill="#2563eb"/>
+    <!-- magnifier -->
+    <g transform="translate(360,150)">
+      <circle cx="0" cy="0" r="26" fill="#fff" stroke="#cfe8ff"/>
+      <circle cx="0" cy="0" r="14" fill="#60a5fa"/>
+      <rect x="18" y="18" width="30" height="8" rx="4" transform="rotate(45 18 18)" fill="#9ed0ff"/>
+    </g>
+    <!-- base/keyboard -->
+    <rect x="0" y="380" width="720" height="18" rx="6" fill="#f1f5f9"/>
+    <rect x="0" y="396" width="720" height="6" rx="3" fill="#e2e8f0"/>
+  </g>
+  <!-- Accent circles -->
+  <circle cx="680" cy="90" r="36" fill="#dbeafe"/>
+  <circle cx="740" cy="200" r="18" fill="#bfdbfe"/>
+</svg>
