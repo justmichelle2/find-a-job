@@ -55,12 +55,18 @@
                         
                         {% if request.status == 'P' %}
                         <div class="d-flex gap-2 mt-3">
-                            <a href="{% url 'messaging:respond_chat_request' request.pk 'approve' %}" class="btn btn-success btn-sm">
-                                <i class="bi bi-check-circle"></i> Approve
-                            </a>
-                            <a href="{% url 'messaging:respond_chat_request' request.pk 'reject' %}" class="btn btn-danger btn-sm">
-                                <i class="bi bi-x-circle"></i> Reject
-                            </a>
+                            <form method="post" action="{% url 'messaging:respond_chat_request' request.pk 'approve' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="bi bi-check-circle"></i> Approve
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'messaging:respond_chat_request' request.pk 'reject' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="bi bi-x-circle"></i> Reject
+                                </button>
+                            </form>
                         </div>
                         {% elif request.status == 'A' %}
                         <a href="{% url 'messaging:conversation_detail' request.application.pk %}" class="btn btn-primary btn-sm mt-3">

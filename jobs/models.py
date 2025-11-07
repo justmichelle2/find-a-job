@@ -96,7 +96,7 @@ class JobPost(models.Model):
                                 choices=JOB_TYPE_CHOICES,
                                 default=FULL_TIME)
     date_posted = models.DateTimeField(default=timezone.now)
-    deadline = models.DateField(help_text="Application deadline")
+    deadline = models.DateTimeField(help_text="Application deadline (date and time)")
     salary = models.DecimalField(max_digits=10,
                                  decimal_places=2,
                                  null=True,

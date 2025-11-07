@@ -28,8 +28,14 @@
                 <strong>Conversation:</strong> {{ msg.conversation }}<br>
                 <strong>Message:</strong> {{ msg.content }}<br>
                 <strong>Time:</strong> {{ msg.timestamp }}<br>
-                <a href="{% url 'messaging:admin_flag_message' msg.pk %}" class="btn btn-sm btn-success mt-2">Unflag</a>
-                <a href="{% url 'messaging:admin_deactivate' msg.conversation.pk %}" class="btn btn-sm btn-danger mt-2">Deactivate Conversation</a>
+                <form method="post" action="{% url 'messaging:admin_flag_message' msg.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-success mt-2">Unflag</button>
+                </form>
+                <form method="post" action="{% url 'messaging:admin_deactivate' msg.conversation.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger mt-2">Deactivate Conversation</button>
+                </form>
             </div>
             {% endfor %}
         </div>
@@ -58,9 +64,12 @@
                     </div>
                     <div>
                         {% if conv.is_active %}
-                            <a href="{% url 'messaging:admin_deactivate' conv.pk %}" class="btn btn-danger btn-sm">
-                                <i class="bi bi-x-circle"></i> Deactivate
-                            </a>
+                            <form method="post" action="{% url 'messaging:admin_deactivate' conv.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="bi bi-x-circle"></i> Deactivate
+                                </button>
+                            </form>
                         {% endif %}
                     </div>
                 </div>
@@ -74,10 +83,16 @@
                             <strong>{{ msg.sender.username }}:</strong> {{ msg.content|truncatewords:15 }}<br>
                             <span class="text-muted">{{ msg.timestamp|timesince }} ago</span>
                             {% if not msg.flagged_by_admin %}
-                                <a href="{% url 'messaging:admin_flag_message' msg.pk %}" class="btn btn-sm btn-outline-warning ms-2">Flag</a>
+                                <form method="post" action="{% url 'messaging:admin_flag_message' msg.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning ms-2">Flag</button>
+                                </form>
                             {% else %}
                                 <span class="badge bg-warning">Flagged</span>
-                                <a href="{% url 'messaging:admin_flag_message' msg.pk %}" class="btn btn-sm btn-outline-success ms-2">Unflag</a>
+                                <form method="post" action="{% url 'messaging:admin_flag_message' msg.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success ms-2">Unflag</button>
+                                </form>
                             {% endif %}
                         </small>
                     </div>

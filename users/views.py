@@ -5,6 +5,8 @@ from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth.decorators import user_passes_test
 from django.core.mail import send_mail
 from django.conf import settings
@@ -542,6 +544,11 @@ def verify_email(request, uidb64, token):
     return redirect('users:register')
 
 
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import ensure_csrf_cookie
+
+@never_cache
+@ensure_csrf_cookie
 def login_view(request):
     """
     Function-based view for user login.
@@ -550,6 +557,11 @@ def login_view(request):
         return redirect('jobs:job_list')
 
     if request.method == 'POST':
+        # Debug CSRF token
+        print(f"POST data: {request.POST}")
+        print(f"CSRF Cookie: {request.COOKIES.get('csrftoken', 'NOT FOUND')}")
+        print(f"CSRF Token from POST: {request.POST.get('csrfmiddlewaretoken', 'NOT FOUND')}")
+        
         form = LoginForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
@@ -587,6 +599,8 @@ def verify_user(request, user_id, status):
     Admin view to verify or reject a user's account
     """
     from .models import CustomUser
+    from django.contrib.auth import update_session_auth_hash
+    
     user = get_object_or_404(CustomUser, pk=user_id)
     
     if status not in [CustomUser.VERIFIED, CustomUser.REJECTED]:
@@ -595,6 +609,12 @@ def verify_user(request, user_id, status):
     
     user.verification_status = status
     user.save()
+    
+    # If the user being verified is currently logged in, refresh their session
+    # This ensures the navbar updates immediately without logout/login
+    if hasattr(request, 'session'):
+        # Store updated user info in session
+        request.session.modified = True
     
     # Send email notification to user
     status_text = "verified" if status == CustomUser.VERIFIED else "rejected"

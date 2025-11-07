@@ -28,8 +28,8 @@
                 {% endif %}
                 
                 <div class="card-body" style="max-height: 500px; overflow-y: auto;" id="messageContainer">
-                    {% if messages %}
-                        {% for msg in messages %}
+                    {% if chat_messages %}
+                        {% for msg in chat_messages %}
                         <div class="mb-3 {% if msg.sender == user %}text-end{% endif %}">
                             <div class="d-inline-block p-2 rounded {% if msg.sender == user %}bg-primary text-white{% else %}bg-light{% endif %}" style="max-width: 70%;">
                                 <small class="d-block fw-bold">
@@ -83,11 +83,5 @@
     if (messageContainer) {
         messageContainer.scrollTop = messageContainer.scrollHeight;
     }
-    
-    // Auto-refresh messages every 10 seconds (simple polling)
-    setInterval(function() {
-        if (document.hidden) return; // Don't refresh if tab is hidden
-        location.reload();
-    }, 10000);
 </script>
 {% endblock %}

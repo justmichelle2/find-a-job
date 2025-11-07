@@ -83,7 +83,8 @@
                             <span class="d-none d-lg-inline"> Monitor Chats</span>
                         </a>
                     </li>
-                    {% elif user.is_authenticated and user.email_verified and user.verification_status == 'V' %}
+                    {% elif user.is_authenticated and user.verification_status == 'V' %}
+                    <!-- Common links for all verified users -->
                     <li class="nav-item">
                         <a class="nav-link position-relative" href="{% url 'notifications:list' %}">
                             <i class="bi bi-bell"></i>
@@ -101,6 +102,14 @@
                             <span class="d-none d-lg-inline"> Messages</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'messaging:chat_requests' %}">
+                            <i class="bi bi-envelope-heart"></i>
+                            <span class="d-none d-lg-inline"> Chat Requests</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Company-specific links -->
                     {% if user.is_company %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'jobs:company_dashboard' %}">
@@ -120,13 +129,9 @@
                             <span class="d-none d-lg-inline"> My Jobs</span>
                         </a>
                     </li>
+                    
+                    <!-- Student-specific links -->
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'jobs:student_dashboard' %}">
-                            <i class="bi bi-grid"></i>
-                            <span class="d-none d-lg-inline"> Dashboard</span>
-                        </a>
-                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'jobs:my_applications' %}">
                             <i class="bi bi-file-earmark-text"></i>

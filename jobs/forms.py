@@ -44,9 +44,9 @@ class JobPostForm(forms.ModelForm):
             'job_type':
             forms.Select(attrs={'class': 'form-control'}),
             'deadline':
-            forms.DateInput(attrs={
+            forms.DateTimeInput(attrs={
                 'class': 'form-control',
-                'type': 'date'
+                'type': 'datetime-local'
             }),
             'currency':
             forms.Select(attrs={'class': 'form-control'}),

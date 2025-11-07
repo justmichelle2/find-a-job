@@ -39,9 +39,14 @@
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <p><strong><i class="bi bi-geo-alt"></i> Location:</strong><br>{{ job.location }}</p>
+                        {% if job.latitude and job.longitude %}
+                        <p class="small text-success">
+                            <i class="bi bi-pin-map-fill"></i> Live location available
+                        </p>
+                        {% endif %}
                     </div>
                     <div class="col-md-4">
-                        <p><strong><i class="bi bi-calendar-x"></i> Deadline:</strong><br>{{ job.deadline }}</p>
+                        <p><strong><i class="bi bi-calendar-x"></i> Deadline:</strong><br>{{ job.deadline|date:"M d, Y g:i A" }}</p>
                     </div>
                     {% if job.salary %}
                     <div class="col-md-4">
@@ -49,6 +54,13 @@
                     </div>
                     {% endif %}
                 </div>
+
+                {% if job.latitude and job.longitude %}
+                <div class="mb-4">
+                    <h5><i class="bi bi-map"></i> Job Location on Map</h5>
+                    <div id="map" style="height: 300px; border-radius: 8px; border: 1px solid #ddd;"></div>
+                </div>
+                {% endif %}
 
                 <p class="text-muted small">
                     <i class="bi bi-clock"></i> Posted on: {{ job.date_posted|date:"F d, Y" }}
@@ -114,6 +126,12 @@
                     {% if job.company.email %}
                         <i class="bi bi-envelope"></i> {{ job.company.email }}<br>
                     {% endif %}
+                    {% if job.company.phone_number %}
+                        <i class="bi bi-telephone"></i> {{ job.company.phone_number }}<br>
+                    {% endif %}
+                    {% if job.company.institution %}
+                        <i class="bi bi-building"></i> {{ job.company.institution }}<br>
+                    {% endif %}
                     <strong>Account Type:</strong> Company Account
                 </p>
             </div>
@@ -127,6 +145,29 @@
 {% endblock %}
 
 {% block extra_js %}
+{% if job.latitude and job.longitude %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the map
+        var map = L.map('map').setView([{{ job.latitude }}, {{ job.longitude }}], 13);
+        
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Add a marker for the job location
+        var marker = L.marker([{{ job.latitude }}, {{ job.longitude }}]).addTo(map);
+        marker.bindPopup('<b>{{ job.title }}</b><br>{{ job.location }}').openPopup();
+    });
+</script>
+{% endif %}
+
 <script>
     // Note: For production, you'd want to compare server-side
     // This is just for demonstration
@@ -139,4 +180,3 @@
     });
 </script>
 {% endblock %}
-

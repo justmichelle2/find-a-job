@@ -89,6 +89,10 @@ def chat_requests(request):
 @login_required
 def respond_to_chat_request(request, request_id, action):
     """Approve or reject a chat request"""
+    if request.method != 'POST':
+        messages.error(request, "Invalid request method.")
+        return redirect('messaging:chat_requests')
+    
     chat_request = get_object_or_404(ChatRequest, pk=request_id, recipient=request.user)
     
     if chat_request.status != ChatRequest.PENDING:
@@ -207,11 +211,11 @@ def conversation_detail(request, application_id):
     ).exclude(sender=request.user).update(is_read=True)
     
     # Get all messages
-    message_list = conversation.messages.all().select_related('sender')
+    chat_messages = conversation.messages.all().select_related('sender')
     
     return render(request, 'messaging/conversation_detail.html', {
         'conversation': conversation,
-        'messages': message_list,
+        'chat_messages': chat_messages,
         'application': application,
         'other_user': conversation.get_other_participant(request.user)
     })
@@ -244,6 +248,10 @@ def admin_monitor_conversations(request):
 @user_passes_test(lambda u: u.is_superuser)
 def admin_deactivate_conversation(request, conversation_id):
     """Admin can deactivate a conversation if it violates business conduct"""
+    if request.method != 'POST':
+        messages.error(request, "Invalid request method.")
+        return redirect('messaging:admin_monitor')
+    
     conversation = get_object_or_404(Conversation, pk=conversation_id)
     conversation.is_active = False
     conversation.save()
@@ -266,6 +274,10 @@ def admin_deactivate_conversation(request, conversation_id):
 @user_passes_test(lambda u: u.is_superuser)
 def admin_flag_message(request, message_id):
     """Admin can flag inappropriate messages"""
+    if request.method != 'POST':
+        messages.error(request, "Invalid request method.")
+        return redirect('messaging:admin_monitor')
+    
     message = get_object_or_404(Message, pk=message_id)
     message.flagged_by_admin = not message.flagged_by_admin
     message.save()
