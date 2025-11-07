@@ -57,6 +57,12 @@
                                 Location <span class="text-danger">*</span>
                             </label>
                             {{ form.location }}
+                            {{ form.latitude }}
+                            {{ form.longitude }}
+                            <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-live-location-btn">
+                                <i class="bi bi-geo-alt"></i> Add Live Location (Optional)
+                            </button>
+                            <small class="text-muted d-block mt-1" id="location-status"></small>
                             {% if form.location.errors %}
                                 <div class="text-danger small">{{ form.location.errors }}</div>
                             {% endif %}
@@ -142,3 +148,57 @@
 </div>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addLocationBtn = document.getElementById('add-live-location-btn');
+    const latitudeInput = document.getElementById('latitude-input');
+    const longitudeInput = document.getElementById('longitude-input');
+    const locationStatus = document.getElementById('location-status');
+    
+    if (addLocationBtn) {
+        addLocationBtn.addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                locationStatus.textContent = 'Geolocation is not supported by your browser.';
+                locationStatus.className = 'text-danger d-block mt-1';
+                return;
+            }
+            
+            locationStatus.textContent = 'Requesting location permission...';
+            locationStatus.className = 'text-info d-block mt-1';
+            addLocationBtn.disabled = true;
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    latitudeInput.value = position.coords.latitude.toFixed(6);
+                    longitudeInput.value = position.coords.longitude.toFixed(6);
+                    locationStatus.textContent = '✓ Live location added (Lat: ' + position.coords.latitude.toFixed(4) + ', Lng: ' + position.coords.longitude.toFixed(4) + ')';
+                    locationStatus.className = 'text-success d-block mt-1';
+                    addLocationBtn.textContent = '✓ Location Added';
+                    addLocationBtn.className = 'btn btn-sm btn-success mt-2';
+                },
+                function(error) {
+                    let errorMessage = '';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'Location permission denied. Please allow location access in your browser settings.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'Location information unavailable.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'Location request timed out.';
+                            break;
+                        default:
+                            errorMessage = 'An unknown error occurred.';
+                    }
+                    locationStatus.textContent = errorMessage;
+                    locationStatus.className = 'text-danger d-block mt-1';
+                    addLocationBtn.disabled = false;
+                }
+            );
+        });
+    }
+});
+</script>
+{% endblock %}

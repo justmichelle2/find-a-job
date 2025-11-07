@@ -54,12 +54,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'jobs:job_list' %}">Browse Jobs</a>
+                        <a class="nav-link" href="{% url 'jobs:job_list' %}">
+                            <i class="bi bi-search"></i>
+                            <span class="d-none d-lg-inline"> Browse Jobs</span>
+                        </a>
                     </li>
                     {% if user.is_authenticated and user.is_superuser %}
                     <li class="nav-item">
                         <a class="nav-link position-relative" href="{% url 'notifications:list' %}">
-                            <i class="bi bi-bell"></i> Notifications
+                            <i class="bi bi-bell"></i>
+                            <span class="d-none d-lg-inline"> Notifications</span>
                             {% if notification_count %}
                                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                     {{ notification_count }}
@@ -69,13 +73,21 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'jobs:admin_dashboard' %}">
-                            <i class="bi bi-speedometer2"></i> Admin Dashboard
+                            <i class="bi bi-speedometer2"></i>
+                            <span class="d-none d-lg-inline"> Admin Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'messaging:admin_monitor' %}">
+                            <i class="bi bi-shield-check"></i>
+                            <span class="d-none d-lg-inline"> Monitor Chats</span>
                         </a>
                     </li>
                     {% elif user.is_authenticated and user.email_verified and user.verification_status == 'V' %}
                     <li class="nav-item">
                         <a class="nav-link position-relative" href="{% url 'notifications:list' %}">
-                            <i class="bi bi-bell"></i> Notifications
+                            <i class="bi bi-bell"></i>
+                            <span class="d-none d-lg-inline"> Notifications</span>
                             {% if notification_count %}
                                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                     {{ notification_count }}
@@ -83,26 +95,43 @@
                             {% endif %}
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'messaging:conversations' %}">
+                            <i class="bi bi-chat-dots"></i>
+                            <span class="d-none d-lg-inline"> Messages</span>
+                        </a>
+                    </li>
                     {% if user.is_company %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'jobs:company_dashboard' %}">
-                            <i class="bi bi-grid"></i> Dashboard
+                            <i class="bi bi-grid"></i>
+                            <span class="d-none d-lg-inline"> Dashboard</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'jobs:create_job' %}">Post Job</a>
+                        <a class="nav-link" href="{% url 'jobs:create_job' %}">
+                            <i class="bi bi-plus-circle"></i>
+                            <span class="d-none d-lg-inline"> Post Job</span>
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'jobs:my_jobs' %}">My Jobs</a>
+                        <a class="nav-link" href="{% url 'jobs:my_jobs' %}">
+                            <i class="bi bi-briefcase"></i>
+                            <span class="d-none d-lg-inline"> My Jobs</span>
+                        </a>
                     </li>
                     {% else %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'jobs:student_dashboard' %}">
-                            <i class="bi bi-grid"></i> Dashboard
+                            <i class="bi bi-grid"></i>
+                            <span class="d-none d-lg-inline"> Dashboard</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'jobs:my_applications' %}">My Applications</a>
+                        <a class="nav-link" href="{% url 'jobs:my_applications' %}">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span class="d-none d-lg-inline"> My Applications</span>
+                        </a>
                     </li>
                     {% endif %}
                     {% endif %}
@@ -111,12 +140,8 @@
                     {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle me-1"></i> {{ user.username }}
-                            {% if user.is_company and company_unread_count > 0 %}
-                                <span class="badge bg-danger ms-2">{{ company_unread_count }}</span>
-                            {% elif not user.is_company and applicant_unread_count > 0 %}
-                                <span class="badge bg-danger ms-2">{{ applicant_unread_count }}</span>
-                            {% endif %}
+                            <i class="bi bi-person-circle me-1"></i>
+                            <span class="d-none d-lg-inline">{{ user.username }}</span>
                         </a>
                         <ul class="dropdown-menu">
                             <li><span class="dropdown-item-text">
@@ -133,12 +158,14 @@
                     {% else %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'users:login' %}">
-                            <i class="bi bi-box-arrow-in-right"></i> Login
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            <span class="d-none d-lg-inline"> Login</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'users:register' %}">
-                            <i class="bi bi-person-plus"></i> Register
+                            <i class="bi bi-person-plus"></i>
+                            <span class="d-none d-lg-inline"> Register</span>
                         </a>
                     </li>
                     {% endif %}

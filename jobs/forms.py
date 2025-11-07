@@ -17,8 +17,8 @@ class JobPostForm(forms.ModelForm):
     class Meta:
         model = JobPost
         fields = [
-            'title', 'description', 'requirements', 'location', 'category',
-            'job_type', 'deadline', 'salary', 'currency', 'image'
+            'title', 'description', 'requirements', 'location', 'latitude', 'longitude',
+            'category', 'job_type', 'deadline', 'salary', 'currency', 'image'
         ]
         widgets = {
             'title':
@@ -34,7 +34,11 @@ class JobPostForm(forms.ModelForm):
                 'rows': 5
             }),
             'location':
-            forms.TextInput(attrs={'class': 'form-control'}),
+            forms.TextInput(attrs={'class': 'form-control', 'id': 'location-input'}),
+            'latitude':
+            forms.HiddenInput(attrs={'id': 'latitude-input'}),
+            'longitude':
+            forms.HiddenInput(attrs={'id': 'longitude-input'}),
             'category':
             forms.Select(attrs={'class': 'form-control'}),
             'job_type':

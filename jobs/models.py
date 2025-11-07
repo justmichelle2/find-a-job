@@ -75,6 +75,20 @@ class JobPost(models.Model):
     requirements = models.TextField(
         help_text="Required qualifications and skills")
     location = models.CharField(max_length=200)
+    latitude = models.DecimalField(
+        max_digits=9, 
+        decimal_places=6, 
+        null=True, 
+        blank=True,
+        help_text="Latitude for live location (optional, requires user permission)"
+    )
+    longitude = models.DecimalField(
+        max_digits=9, 
+        decimal_places=6, 
+        null=True, 
+        blank=True,
+        help_text="Longitude for live location (optional, requires user permission)"
+    )
     category = models.CharField(max_length=3,
                                 choices=CATEGORY_CHOICES,
                                 default=IT)

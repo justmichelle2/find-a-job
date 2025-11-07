@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Conversations - Campus Job Board{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"><i class="bi bi-chat-left-text"></i> My Conversations</h2>
+    
+    {% if conversations %}
+        <div class="row">
+            {% for conv in conversations %}
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-person-circle"></i> {{ conv.get_other_participant.username }}
+                        </h5>
+                        <p class="text-muted mb-2">
+                            <small><i class="bi bi-briefcase"></i> {{ conv.application.job.title }}</small>
+                        </p>
+                        <p class="mb-2">
+                            {% with last_msg=conv.messages.last %}
+                                {% if last_msg %}
+                                    <strong>Last message:</strong> {{ last_msg.content|truncatewords:10 }}<br>
+                                    <small class="text-muted"><i class="bi bi-clock"></i> {{ last_msg.timestamp|timesince }} ago</small>
+                                {% else %}
+                                    <em>No messages yet</em>
+                                {% endif %}
+                            {% endwith %}
+                        </p>
+                        <a href="{% url 'messaging:conversation_detail' conv.application.pk %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-chat-dots"></i> Open Conversation
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No active conversations. Request a chat to get started.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -81,9 +81,14 @@
                             {% endif %}
                         {% endif %}
 
-                        <a href="{% url 'jobs:view_application' application.pk %}" class="btn btn-outline-primary btn-sm mt-2">
-                            View Job Details
-                        </a>
+                        <div class="d-flex gap-2 mt-2">
+                            <a href="{% url 'jobs:view_application' application.pk %}" class="btn btn-outline-primary btn-sm">
+                                View Job Details
+                            </a>
+                            <a href="{% url 'messaging:request_chat' application.pk %}" class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-chat-dots"></i> Chat
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

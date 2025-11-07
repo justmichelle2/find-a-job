@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat Requests - Campus Job Board{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"><i class="bi bi-chat-square-dots"></i> Chat Requests</h2>
+    
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="incoming-tab" data-bs-toggle="tab" data-bs-target="#incoming" type="button">
+                Incoming Requests
+                {% if incoming|length > 0 %}
+                    <span class="badge bg-danger">{{ incoming|length }}</span>
+                {% endif %}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="outgoing-tab" data-bs-toggle="tab" data-bs-target="#outgoing" type="button">
+                Sent Requests
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content">
+        <!-- Incoming Requests -->
+        <div class="tab-pane fade show active" id="incoming" role="tabpanel">
+            {% if incoming %}
+                {% for request in incoming %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title">
+                                    <i class="bi bi-person-circle"></i> {{ request.requester.username }}
+                                </h5>
+                                <p class="text-muted mb-2">
+                                    <small><i class="bi bi-briefcase"></i> {{ request.application.job.title }}</small>
+                                </p>
+                                <p class="mb-2"><strong>Reason:</strong> {{ request.message }}</p>
+                                <p class="text-muted small">
+                                    <i class="bi bi-clock"></i> Requested {{ request.created_at|timesince }} ago
+                                </p>
+                            </div>
+                            <div>
+                                {% if request.status == 'P' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% elif request.status == 'A' %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if request.status == 'P' %}
+                        <div class="d-flex gap-2 mt-3">
+                            <a href="{% url 'messaging:respond_chat_request' request.pk 'approve' %}" class="btn btn-success btn-sm">
+                                <i class="bi bi-check-circle"></i> Approve
+                            </a>
+                            <a href="{% url 'messaging:respond_chat_request' request.pk 'reject' %}" class="btn btn-danger btn-sm">
+                                <i class="bi bi-x-circle"></i> Reject
+                            </a>
+                        </div>
+                        {% elif request.status == 'A' %}
+                        <a href="{% url 'messaging:conversation_detail' request.application.pk %}" class="btn btn-primary btn-sm mt-3">
+                            <i class="bi bi-chat-dots"></i> Go to Conversation
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No incoming chat requests.
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Outgoing Requests -->
+        <div class="tab-pane fade" id="outgoing" role="tabpanel">
+            {% if outgoing %}
+                {% for request in outgoing %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title">
+                                    To: <i class="bi bi-person-circle"></i> {{ request.recipient.username }}
+                                </h5>
+                                <p class="text-muted mb-2">
+                                    <small><i class="bi bi-briefcase"></i> {{ request.application.job.title }}</small>
+                                </p>
+                                <p class="mb-2"><strong>Your message:</strong> {{ request.message }}</p>
+                                <p class="text-muted small">
+                                    <i class="bi bi-clock"></i> Sent {{ request.created_at|timesince }} ago
+                                </p>
+                            </div>
+                            <div>
+                                {% if request.status == 'P' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% elif request.status == 'A' %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if request.status == 'A' %}
+                        <a href="{% url 'messaging:conversation_detail' request.application.pk %}" class="btn btn-primary btn-sm mt-3">
+                            <i class="bi bi-chat-dots"></i> Go to Conversation
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No sent chat requests.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
